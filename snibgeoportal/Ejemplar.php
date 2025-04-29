@@ -123,6 +123,8 @@
     ?>
     <link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.2.0/css/font-awesome.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/Leaflet.awesome-markers/2.0.2/leaflet.awesome-markers.css" integrity="sha512-cUoWMYmv4H9TGPZnझ्f9AFj7NnvDu3VVJctcw+5+246oDf0CLRh+jVIsiQbdxfjGkYPdIYzjBJpdDCDBePWAQ==" crossorigin="anonymous" referrerpolicy="no-referrer" />
     <style>
         #map {
             height: 400px;
@@ -215,19 +217,9 @@
         }
 
         .popup-warning strong {
-            margin-left: 5px; 
+            margin-left: 5px;
         }
     </style>
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-
-            L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-            }).addTo(map);
-
-            L.marker([<?php echo $lat; ?>, <?php echo $lon; ?>]).addTo(map);
-        });
-    </script>
 </head>
 
 <body>
@@ -603,6 +595,7 @@
     </div>
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script async src="https://www.googletagmanager.com/gtag/js?id=UA-8226401-20"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Leaflet.awesome-markers/2.0.2/leaflet.awesome-markers.min.js"></script>
     <script>
         window.dataLayer = window.dataLayer || [];
 
@@ -612,6 +605,7 @@
         gtag('js', new Date());
         gtag('config', 'UA-8226401-20');
     </script>
+
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {
@@ -625,8 +619,6 @@
             const umbralIncertidumbre = 50000;
             const iconoAdvertencia = '⚠️';
 
-            console.log("Valor incertidumbre (desde PHP):", incertidumbre);
-
             if (typeof lat !== 'number' || typeof lon !== 'number' || isNaN(lat) || isNaN(lon)) {
                 console.error("Coordenadas inválidas para el mapa: ", lat, lon);
                 document.getElementById('map').innerHTML = '<p style="color: red; text-align: center;">Error: No se pueden mostrar las coordenadas en el mapa.</p>';
@@ -634,27 +626,48 @@
             }
 
             var map = L.map('map').setView([lat, lon], 8);
-
             L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
                 attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
             }).addTo(map);
-
             L.control.scale({
                 metric: true,
                 imperial: false
             }).addTo(map);
 
-            var marker = L.marker([lat, lon]).addTo(map);
+            const iconoAwesomeAzul = L.AwesomeMarkers.icon({
+                icon: 'circle',
+                prefix: 'fa',
+                markerColor: 'blue'
+            });
+
+            const iconoAwesomeRojo = L.AwesomeMarkers.icon({
+                icon: 'circle',
+                prefix: 'fa',
+                markerColor: 'red'
+            });
+
 
             var incertidumbreNumerica = parseFloat(incertidumbre);
             let contenidoPopup = '';
+            let opcionesCirculo = {};
+            let debeMostrarCirculo = false;
+            let debeAjustarBounds = false;
+            let zoomInicial = 15;
+            let iconoParaUsar = iconoAwesomeAzul; 
 
             if (!isNaN(incertidumbreNumerica) && incertidumbreNumerica > 0) {
+                debeMostrarCirculo = true;
 
                 if (incertidumbreNumerica > umbralIncertidumbre) {
+                    iconoParaUsar = iconoAwesomeRojo; 
                     console.log("Incertidumbre excede el umbral:", incertidumbreNumerica);
+                    opcionesCirculo = {
+                        radius: incertidumbreNumerica,
+                        color: '#ff0000',
+                        fillColor: '#ff0000',
+                        fillOpacity: 0.2
+                    };
                     const mensajeAdvertencia = 'Sobrepasa los límites de representación geoespacial.';
-
                     contenidoPopup = `
                      <div class="popup-warning">
                         <span class="warning-icon">${iconoAdvertencia}</span> <strong>${mensajeAdvertencia}</strong>
@@ -663,42 +676,59 @@
                     <div><strong>Estado:</strong> ${estado || 'N/A'}</div>
                     <div><strong>Municipio:</strong> ${municipio || 'N/A'}</div>
                     <div><strong>Incertidumbre geográfica:</strong> ${incertidumbreNumerica.toLocaleString()} m</div>
-                `;
-                    map.setView([lat, lon], 10);
+                    `;
+                    zoomInicial = 6; 
 
                 } else {
+                    iconoParaUsar = iconoAwesomeAzul; 
                     console.log("Dibujando círculo con radio:", incertidumbreNumerica);
-                    var circle = L.circle([lat, lon], {
+                    opcionesCirculo = {
                         radius: incertidumbreNumerica,
                         color: '#3388ff',
                         fillColor: '#3388ff',
                         fillOpacity: 0.2
-                    }).addTo(map);
-
-                    map.fitBounds(circle.getBounds(), {
-                        padding: [20, 20]
-                    });
-
+                    };
                     contenidoPopup = `
                     <div><strong>País:</strong> ${pais || 'N/A'}</div>
                     <div><strong>Estado:</strong> ${estado || 'N/A'}</div>
                     <div><strong>Municipio:</strong> ${municipio || 'N/A'}</div>
                     <div><strong>Incertidumbre:</strong> ${incertidumbreNumerica.toLocaleString()} m</div>
-                `;
+                    `;
+                    debeAjustarBounds = true;
                 }
 
             } else {
+                iconoParaUsar = iconoAwesomeAzul; 
+                console.log("Sin radio de incertidumbre válido.");
                 contenidoPopup = `
-                <div><strong>País:</strong> ${pais || 'N/A'}</div>
-                <div><strong>Estado:</strong> ${estado || 'N/A'}</div>
-                <div><strong>Municipio:</strong> ${municipio || 'N/A'}</div>
-            `;
-                map.setView([lat, lon], 15);
+                    <div><strong>País:</strong> ${pais || 'N/A'}</div>
+                    <div><strong>Estado:</strong> ${estado || 'N/A'}</div>
+                    <div><strong>Municipio:</strong> ${municipio || 'N/A'}</div>
+                `;
+                zoomInicial = 15;
             }
+
+            var marker = L.marker([lat, lon], {
+                icon: iconoParaUsar
+            }).addTo(map);
+
+            var circle = null;
+            if (debeMostrarCirculo) {
+                circle = L.circle([lat, lon], opcionesCirculo).addTo(map);
+            }
+
+            if (debeAjustarBounds && circle) {
+                map.fitBounds(circle.getBounds(), {
+                    padding: [20, 20]
+                });
+            } else {
+                map.setView([lat, lon], zoomInicial);
+            }
+
             marker.bindPopup(contenidoPopup);
+            marker.openPopup(); 
 
-            marker.openPopup();
-
+            console.log("Script finished executing."); 
 
         });
     </script>
