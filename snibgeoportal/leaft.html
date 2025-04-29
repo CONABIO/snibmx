@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Leaflet Map Example</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.css" />
+    <style>
+        #mapid {
+            height: 400px;
+            width: 100%;
+        }
+    </style>
+</head>
+<body>
+    <div id="mapid"></div>
+    <br>
+    Latitude: <input type="text" id="latitude" readonly>
+    Longitude: <input type="text" id="longitude" readonly>
+    <button onclick="mostrarValores()">Mostrar Valores</button>
+
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+    <script src="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.js"></script>
+    <script>
+        var map = null;
+        var marker = null;
+        var geocoder = L.Control.Geocoder.nominatim();
+
+        function initialize() {
+            map = L.map('mapid').setView([20.68017, -101.35437], 4);
+			
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                maxZoom: 18,
+                attribution: 'Map data &copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors'
+            }).addTo(map);
+
+            marker = L.marker([20.68017, -101.35437], { draggable: true }).addTo(map);
+            marker.bindPopup("<b>Marker position:</b><br/>Drag me and click to update the position.").openPopup();
+
+            marker.on('dragend', function (e) {
+                var markerLatLng = marker.getLatLng();
+                document.getElementById("latitude").value = markerLatLng.lat;
+                document.getElementById("longitude").value = markerLatLng.lng;
+
+                // Geocodificación inversa para obtener el nombre de la ciudad
+                geocoder.reverse(markerLatLng, map.options.crs.scale(map.getZoom()), function (results) {
+                    if (results.length > 0) {
+                        var city = results[0].name;
+                        alert("Ciudad: " + city);
+                    }
+                });
+            });
+
+            map.on('click', function (e) {
+                marker.setLatLng(e.latlng);
+                var markerLatLng = marker.getLatLng();
+                document.getElementById("latitude").value = markerLatLng.lat;
+                document.getElementById("longitude").value = markerLatLng.lng;
+            });
+        }
+
+        function mostrarValores() {
+            var latitud = parseFloat(document.getElementById("latitude").value);
+            var longitud = parseFloat(document.getElementById("longitude").value);
+            alert("Latitud: " + latitud + "\nLongitud: " + longitud);
+        }
+
+        window.onload = initialize;
+        
+    </script>
+</body>
+</html>
