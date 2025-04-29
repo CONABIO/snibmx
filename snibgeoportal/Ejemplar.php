@@ -606,7 +606,6 @@
         gtag('config', 'UA-8226401-20');
     </script>
 
-
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             var lat = <?php echo json_encode($lat); ?>;
@@ -625,7 +624,10 @@
                 return;
             }
 
-            var map = L.map('map').setView([lat, lon], 8);
+            var map = L.map('map', {
+                minZoom: 1
+            }).setView([lat, lon], 8);
+
             L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
                 attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
             }).addTo(map);
@@ -639,28 +641,25 @@
                 prefix: 'fa',
                 markerColor: 'blue'
             });
-
             const iconoAwesomeRojo = L.AwesomeMarkers.icon({
                 icon: 'circle',
                 prefix: 'fa',
                 markerColor: 'red'
             });
 
-
             var incertidumbreNumerica = parseFloat(incertidumbre);
             let contenidoPopup = '';
             let opcionesCirculo = {};
             let debeMostrarCirculo = false;
             let debeAjustarBounds = false;
-            let zoomInicial = 15;
-            let iconoParaUsar = iconoAwesomeAzul; 
+            let iconoParaUsar = iconoAwesomeAzul;
 
             if (!isNaN(incertidumbreNumerica) && incertidumbreNumerica > 0) {
                 debeMostrarCirculo = true;
+                debeAjustarBounds = true;
 
                 if (incertidumbreNumerica > umbralIncertidumbre) {
-                    iconoParaUsar = iconoAwesomeRojo; 
-                    console.log("Incertidumbre excede el umbral:", incertidumbreNumerica);
+                    iconoParaUsar = iconoAwesomeRojo;
                     opcionesCirculo = {
                         radius: incertidumbreNumerica,
                         color: '#ff0000',
@@ -669,19 +668,18 @@
                     };
                     const mensajeAdvertencia = 'Sobrepasa los límites de representación geoespacial.';
                     contenidoPopup = `
-                     <div class="popup-warning">
-                        <span class="warning-icon">${iconoAdvertencia}</span> <strong>${mensajeAdvertencia}</strong>
-                    </div>
-                    <div><strong>País:</strong> ${pais || 'N/A'}</div>
-                    <div><strong>Estado:</strong> ${estado || 'N/A'}</div>
-                    <div><strong>Municipio:</strong> ${municipio || 'N/A'}</div>
-                    <div><strong>Incertidumbre geográfica:</strong> ${incertidumbreNumerica.toLocaleString()} m</div>
-                    `;
-                    zoomInicial = 6; 
+                 <div class="popup-warning">
+                    <span class="warning-icon">${iconoAdvertencia}</span> <strong>${mensajeAdvertencia}</strong>
+                </div>
+                <div><strong>País:</strong> ${pais || 'N/A'}</div>
+                <div><strong>Estado:</strong> ${estado || 'N/A'}</div>
+                <div><strong>Municipio:</strong> ${municipio || 'N/A'}</div>
+                <div><strong>Incertidumbre geográfica:</strong> ${incertidumbreNumerica.toLocaleString()} m</div>
+                `;
 
                 } else {
-                    iconoParaUsar = iconoAwesomeAzul; 
-                    console.log("Dibujando círculo con radio:", incertidumbreNumerica);
+                    iconoParaUsar = iconoAwesomeAzul;
+                    console.log("Incertidumbre BAJA, dibujando círculo:", incertidumbreNumerica);
                     opcionesCirculo = {
                         radius: incertidumbreNumerica,
                         color: '#3388ff',
@@ -689,46 +687,49 @@
                         fillOpacity: 0.2
                     };
                     contenidoPopup = `
-                    <div><strong>País:</strong> ${pais || 'N/A'}</div>
-                    <div><strong>Estado:</strong> ${estado || 'N/A'}</div>
-                    <div><strong>Municipio:</strong> ${municipio || 'N/A'}</div>
-                    <div><strong>Incertidumbre:</strong> ${incertidumbreNumerica.toLocaleString()} m</div>
-                    `;
-                    debeAjustarBounds = true;
+                <div><strong>País:</strong> ${pais || 'N/A'}</div>
+                <div><strong>Estado:</strong> ${estado || 'N/A'}</div>
+                <div><strong>Municipio:</strong> ${municipio || 'N/A'}</div>
+                <div><strong>Incertidumbre:</strong> ${incertidumbreNumerica.toLocaleString()} m</div>
+                `;
                 }
 
             } else {
-                iconoParaUsar = iconoAwesomeAzul; 
+                iconoParaUsar = iconoAwesomeAzul;
                 console.log("Sin radio de incertidumbre válido.");
+                debeMostrarCirculo = false;
+                debeAjustarBounds = false;
                 contenidoPopup = `
-                    <div><strong>País:</strong> ${pais || 'N/A'}</div>
-                    <div><strong>Estado:</strong> ${estado || 'N/A'}</div>
-                    <div><strong>Municipio:</strong> ${municipio || 'N/A'}</div>
-                `;
-                zoomInicial = 15;
+                <div><strong>País:</strong> ${pais || 'N/A'}</div>
+                <div><strong>Estado:</strong> ${estado || 'N/A'}</div>
+                <div><strong>Municipio:</strong> ${municipio || 'N/A'}</div>
+            `;
             }
+
 
             var marker = L.marker([lat, lon], {
                 icon: iconoParaUsar
             }).addTo(map);
+
 
             var circle = null;
             if (debeMostrarCirculo) {
                 circle = L.circle([lat, lon], opcionesCirculo).addTo(map);
             }
 
+
             if (debeAjustarBounds && circle) {
+                console.log("Ajustando vista a los límites del círculo.");
                 map.fitBounds(circle.getBounds(), {
-                    padding: [20, 20]
+                    padding: [50, 50]
                 });
             } else {
-                map.setView([lat, lon], zoomInicial);
+                console.log("Estableciendo vista con setView (sin incertidumbre).");
+                map.setView([lat, lon], 12);
             }
 
             marker.bindPopup(contenidoPopup);
-            marker.openPopup(); 
-
-            console.log("Script finished executing."); 
+            marker.openPopup();
 
         });
     </script>
