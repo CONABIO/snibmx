@@ -41,7 +41,7 @@
         $determinador,
         $obsusoinfo,
         $tipoPreparacion,
-        $numeroindividuos, /* <<< Orden correcto */
+        $numeroindividuos,
         $persona,
         $reinocatvalido,
         $divisionphylumcatvalido,
@@ -96,8 +96,7 @@
         $datumoriginal,
         $tipovegetacion,
         $fuentegeorreferenciacion,
-        $latitudFormateada,
-        $longitudFormateada,
+        $coordenadaDescripcion,
         $tipovegetacionmapa,
         $incertidumbreXY
 
@@ -219,6 +218,33 @@
         .popup-warning strong {
             margin-left: 5px;
         }
+
+       
+
+        .table-responsive-wrapper {
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            margin-bottom: 1rem;
+            display: block;
+            width: 100%;
+        }
+
+        .table-responsive-wrapper>table {
+            min-width: 100%;
+        }
+
+        #tabla-curatorial thead th,
+        #tabla-taxonomica thead th,
+        #tabla-geografica thead th {
+            background-color: #9B2247;
+            color: rgb(255, 255, 255);
+            vertical-align: middle;
+            white-space: nowrap;
+        }
+
+        #tabla-recurso tbody td:first-child {
+            font-weight: bold;
+        }
     </style>
 </head>
 
@@ -248,6 +274,10 @@
 
                         <?php if (tieneDatoSignificativo($region)) : ?>
                             <p><b>Ubicación:</b> <?php echo htmlspecialchars($region); ?></p>
+                        <?php endif; ?>
+
+                        <?php if (tieneDatoSignificativo($region)) : ?>
+                            <p><b>Coordenadas geográficas:</b> <?php echo "Longitud: " . $lon . ", latitud" . $lat; ?></p>
                         <?php endif; ?>
 
                         <?php if (tieneDatoSignificativo($fechacolecta)) : ?>
@@ -296,277 +326,275 @@
 
 
                 <h2>Información curatorial</h2>
+                <div class="table-responsive-wrapper">
+                    <table id="tabla-geografica" class="table table-striped table-hover table-bordered">
+                        <thead>
+                            <tr>
+                                <th>Término</th>
+                                <th>Información asignada por CONABIO</th>
+                                <th>Información original</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Procedencia del ejemplar</td>
+                                <td><?php echo '';  ?></td>
+                                <td><?php echo $procedenciaejemplar; ?></td>
+                            </tr>
+                            <tr>
+                                <td>Colección</td>
+                                <td><?php echo $col; ?></td>
+                                <td><?php echo $col; ?></td>
+                            </tr>
+                            <tr>
+                                <td>Institución</td>
+                                <td><?php echo $ins; ?></td>
+                                <td><?php echo $ins; ?></td>
+                            </tr>
+                            <tr>
+                                <td>Número de catálogo</td>
+                                <td><?php echo '';  ?></td>
+                                <td><?php echo $numcatalogo; ?></td>
+                            </tr>
+                            <tr>
+                                <td>Número de colecta u observación</td>
+                                <td><?php echo ''; ?></td>
+                                <td><?php echo $numcolecta; ?></td>
+                            </tr>
+                            <tr>
+                                <td>Número de individuos</td>
+                                <td><?php echo '';  ?></td>
+                                <td><?php echo  $numeroindividuos; ?></td>
+                            </tr>
+                            <tr>
+                                <td>Colector u observador</td>
+                                <td><?php echo '';  ?></td>
+                                <td><?php
+                                    $personaLimpia = isset($persona) ? trim($persona) : '';
+                                    $personaMinusculas = strtolower($personaLimpia);
+                                    if ($personaLimpia === '' || $personaMinusculas === 'no disponible') {
+                                        echo isset($colector) ? htmlspecialchars($colector) : 'N/A';
+                                    } else {
+                                        echo htmlspecialchars($persona);
+                                    }
+                                    ?>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>Fecha de colecta u observación</td>
+                                <td><?php echo '';  ?></td>
+                                <td><?php echo $fechacolecta;  ?></td>
+                            </tr>
+                            <tr>
+                                <td>Determinador</td>
+                                <td><?php echo '';  ?></td>
+                                <td><?php
+                                    $personaLimpia = isset($persona) ? trim($persona) : '';
+                                    $personaMinusculas = strtolower($personaLimpia);
+                                    if ($personaLimpia === '' || $personaMinusculas === 'no disponible') {
+                                        echo isset($determinador) ? htmlspecialchars($determinador) : 'N/A';
+                                    } else {
+                                        echo htmlspecialchars($persona);
+                                    }
+                                    ?>
 
-                <table id="tabla-geografica" class="table table-striped table-hover table-bordered">
-                    <thead>
-                        <tr>
-                            <th>Término</th>
-                            <th>Información asignada por CONABIO</th>
-                            <th>Información original</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td>Procedencia del ejemplar</td>
-                            <td><?php echo '';  ?></td>
-                            <td><?php echo $procedenciaejemplar; ?></td>
-                        </tr>
-                        <tr>
-                            <td>Colección</td>
-                            <td><?php echo $col; ?></td>
-                            <td><?php echo $col; ?></td>
-                        </tr>
-                        <tr>
-                            <td>Institución</td>
-                            <td><?php echo $ins; ?></td>
-                            <td><?php echo $ins; ?></td>
-                        </tr>
-                        <tr>
-                            <td>Número de catálogo</td>
-                            <td><?php echo '';  ?></td>
-                            <td><?php echo $numcatalogo; ?></td>
-                        </tr>
-                        <tr>
-                            <td>Número de colecta u observación</td>
-                            <td><?php echo ''; ?></td>
-                            <td><?php echo $numcolecta; ?></td>
-                        </tr>
-                        <tr>
-                            <td>Número de individuos</td>
-                            <td><?php echo '';  ?></td>
-                            <td><?php echo  $numeroindividuos; ?></td>
-                        </tr>
-                        <tr>
-                            <td>Colector u observador</td>
-                            <td><?php echo '';  ?></td>
-                            <td><?php
-                                $personaLimpia = isset($persona) ? trim($persona) : '';
-                                $personaMinusculas = strtolower($personaLimpia);
-                                if ($personaLimpia === '' || $personaMinusculas === 'no disponible') {
-                                    echo isset($colector) ? htmlspecialchars($colector) : 'N/A';
-                                } else {
-                                    echo htmlspecialchars($persona);
-                                }
-                                ?>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>Fecha de colecta u observación</td>
-                            <td><?php echo '';  ?></td>
-                            <td><?php echo $fechacolecta;  ?></td>
-                        </tr>
-                        <tr>
-                            <td>Determinador</td>
-                            <td><?php echo '';  ?></td>
-                            <td><?php
-                                $personaLimpia = isset($persona) ? trim($persona) : '';
-                                $personaMinusculas = strtolower($personaLimpia);
-                                if ($personaLimpia === '' || $personaMinusculas === 'no disponible') {
-                                    echo isset($determinador) ? htmlspecialchars($determinador) : 'N/A';
-                                } else {
-                                    echo htmlspecialchars($persona);
-                                }
-                                ?>
-
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>Fecha de la determinación</td>
-                            <td><?php echo '';  ?></td>
-                            <td><?php echo $fechadeterminacion;  ?></td>
-                        </tr>
-                        <tr>
-                            <td>Tipo de preparación</td>
-                            <td><?php echo ''; ?></td>
-                            <td><?php echo $tipoPreparacion  ?></td>
-                        </tr>
-                    </tbody>
-                </table>
-
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>Fecha de la determinación</td>
+                                <td><?php echo '';  ?></td>
+                                <td><?php echo $fechadeterminacion;  ?></td>
+                            </tr>
+                            <tr>
+                                <td>Tipo de preparación</td>
+                                <td><?php echo ''; ?></td>
+                                <td><?php echo $tipoPreparacion  ?></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
 
                 <h2>Información taxonómica</h2>
+                <div class="table-responsive-wrapper">
+                    <table id="tabla-geografica" class="table table-striped table-hover table-bordered">
+                        <thead>
+                            <tr>
+                                <th>Término</th>
+                                <th>Información asignada por CONABIO</th>
+                                <th>Información original</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Reino</td>
+                                <td><?php echo $reinocatvalido;  ?></td>
+                                <td><?php echo $reinooriginal; ?></td>
+                            </tr>
+                            <tr>
+                                <td>División o Phylum</td>
+                                <td><?php echo $divisionphylumcatvalido;  ?></td>
+                                <td><?php echo $divisionphylumoriginal; ?></td>
+                            </tr>
+                            <tr>
+                                <td>Clase</td>
+                                <td><?php echo $clasecatvalido;  ?></td>
+                                <td><?php echo $claseoriginal; ?></td>
+                            </tr>
+                            <tr>
+                                <td>Orden</td>
+                                <td><?php echo $ordencatvalido;  ?></td>
+                                <td><?php echo $ordenoriginal; ?></td>
+                            </tr>
+                            <tr>
+                                <td>Familia</td>
+                                <td><?php echo $familiacatvalido; ?></td>
+                                <td><?php echo $familiaoriginal; ?></td>
+                            </tr>
+                            <tr>
+                                <td>Género</td>
+                                <td><?php echo $generocatvalido;  ?></td>
+                                <td><?php echo $generooriginal; ?></td>
+                            </tr>
+                            <tr>
+                                <td>Epíteto específico</td>
+                                <td><?php echo $epitetoespecificocatvalido;  ?></td>
+                                <td><?php echo $epitetoespecificooriginal; ?></td>
+                            </tr>
+                            <tr>
+                                <td>Epíteto infraespecífico</td>
+                                <td><?php echo $epitetoinfraespecificocatvalido;  ?></td>
+                                <td><?php echo $epitetoinfraespecificooriginal;  ?></td>
+                            </tr>
+                            <tr>
+                                <td>Categoria de la infraespecie</td>
+                                <td><?php echo $categoriainfraespeciecatvalido;  ?></td>
+                                <td><?php echo $categoriainfraespecieoriginal;  ?></td>
+                            </tr>
+                            <tr>
+                                <td>Nombre científico</td>
+                                <td><?php echo $nombrevalidocatscat;  ?></td>
+                                <td><?php echo $nombreoriginallimpioscat;  ?></td>
+                            </tr>
 
-                <table id="tabla-geografica" class="table table-striped table-hover table-bordered">
-                    <thead>
-                        <tr>
-                            <th>Término</th>
-                            <th>Información asignada por CONABIO</th>
-                            <th>Información original</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td>Reino</td>
-                            <td><?php echo $reinocatvalido;  ?></td>
-                            <td><?php echo $reinooriginal; ?></td>
-                        </tr>
-                        <tr>
-                            <td>División o Phylum</td>
-                            <td><?php echo $divisionphylumcatvalido;  ?></td>
-                            <td><?php echo $divisionphylumoriginal; ?></td>
-                        </tr>
-                        <tr>
-                            <td>Clase</td>
-                            <td><?php echo $clasecatvalido;  ?></td>
-                            <td><?php echo $claseoriginal; ?></td>
-                        </tr>
-                        <tr>
-                            <td>Orden</td>
-                            <td><?php echo $ordencatvalido;  ?></td>
-                            <td><?php echo $ordenoriginal; ?></td>
-                        </tr>
-                        <tr>
-                            <td>Familia</td>
-                            <td><?php echo $familiacatvalido; ?></td>
-                            <td><?php echo $familiaoriginal; ?></td>
-                        </tr>
-                        <tr>
-                            <td>Género</td>
-                            <td><?php echo $generocatvalido;  ?></td>
-                            <td><?php echo $generooriginal; ?></td>
-                        </tr>
-                        <tr>
-                            <td>Epíteto específico</td>
-                            <td><?php echo $epitetoespecificocatvalido;  ?></td>
-                            <td><?php echo $epitetoespecificooriginal; ?></td>
-                        </tr>
-                        <tr>
-                            <td>Epíteto infraespecífico</td>
-                            <td><?php echo $epitetoinfraespecificocatvalido;  ?></td>
-                            <td><?php echo $epitetoinfraespecificooriginal;  ?></td>
-                        </tr>
-                        <tr>
-                            <td>Categoria de la infraespecie</td>
-                            <td><?php echo $categoriainfraespeciecatvalido;  ?></td>
-                            <td><?php echo $categoriainfraespecieoriginal;  ?></td>
-                        </tr>
-                        <tr>
-                            <td>Nombre científico</td>
-                            <td><?php echo $nombrevalidocatscat;  ?></td>
-                            <td><?php echo $nombreoriginallimpioscat;  ?></td>
-                        </tr>
-
-                        <tr>
-                            <td>Sistema de clasificación/Catálogo de autoridad</td>
-                            <td><?php if ($catdiccinfraespeciecat === '') {
-                                    echo $catdiccespeciecat;
-                                } else {
-                                    echo $catdiccinfraespeciecat;
-                                }
-                                ?></td>
-                            <td><?php if ($catdiccinfraespecieoriginal === '') {
-                                    echo $catdiccespecieoriginal;
-                                } else {
-                                    echo $catdiccinfraespecieoriginal;
-                                }  ?></td>
-                        </tr>
-                        <tr>
-                            <td>Origen</td>
-                            <td><?php echo $endemismo; ?></td>
-                            <td><?php echo ''; ?></td>
-                        </tr>
-                        <tr>
-                            <td>IUCN</td>
-                            <td><?php echo $iucn;  ?></td>
-                            <td><?php echo ''; ?></td>
-                        </tr>
-                        <tr>
-                            <td>CITES</td>
-                            <td><?php echo $cites;  ?></td>
-                            <td><?php echo ''; ?></td>
-                        </tr>
-                        <tr>
-                            <td>NOM-059</td>
-                            <td><?php echo $nom059;  ?></td>
-                            <td><?php echo '';  ?></td>
-                        </tr>
-                        <tr>
-                            <td>Especie prioritaria</td>
-                            <td><?php echo $prioritaria;  ?></td>
-                            <td><?php echo '';  ?></td>
-                        </tr>
-                        <tr>
-                            <td>Especie exotica / invasora</td>
-                            <td><?php echo $exoticainvasora;  ?></td>
-                            <td><?php echo '';  ?></td>
-                        </tr>
-                    </tbody>
-                </table>
+                            <tr>
+                                <td>Sistema de clasificación/Catálogo de autoridad</td>
+                                <td><?php if ($catdiccinfraespeciecat === '') {
+                                        echo $catdiccespeciecat;
+                                    } else {
+                                        echo $catdiccinfraespeciecat;
+                                    }
+                                    ?></td>
+                                <td><?php if ($catdiccinfraespecieoriginal === '') {
+                                        echo $catdiccespecieoriginal;
+                                    } else {
+                                        echo $catdiccinfraespecieoriginal;
+                                    }  ?></td>
+                            </tr>
+                            <tr>
+                                <td>Origen</td>
+                                <td><?php echo $endemismo; ?></td>
+                                <td><?php echo ''; ?></td>
+                            </tr>
+                            <tr>
+                                <td>IUCN</td>
+                                <td><?php echo $iucn;  ?></td>
+                                <td><?php echo ''; ?></td>
+                            </tr>
+                            <tr>
+                                <td>CITES</td>
+                                <td><?php echo $cites;  ?></td>
+                                <td><?php echo ''; ?></td>
+                            </tr>
+                            <tr>
+                                <td>NOM-059</td>
+                                <td><?php echo $nom059;  ?></td>
+                                <td><?php echo '';  ?></td>
+                            </tr>
+                            <tr>
+                                <td>Especie prioritaria</td>
+                                <td><?php echo $prioritaria;  ?></td>
+                                <td><?php echo '';  ?></td>
+                            </tr>
+                            <tr>
+                                <td>Especie exotica / invasora</td>
+                                <td><?php echo $exoticainvasora;  ?></td>
+                                <td><?php echo '';  ?></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
 
 
 
                 <h2>Información geográfica</h2>
-
-                <table id="tabla-geografica" class="table table-striped table-hover table-bordered">
-                    <thead>
-                        <tr>
-                            <th>Término</th>
-                            <th>Información asignada por CONABIO</th>
-                            <th>Información original</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td>País</td>
-                            <td><?php echo $paismapa;  ?></td>
-                            <td><?php echo $paisoriginal; ?></td>
-                        </tr>
-                        <tr>
-                            <td>Estado</td>
-                            <td><?php echo $estadomapa;  ?></td>
-                            <td><?php echo $estadooriginal; ?></td>
-                        </tr>
-                        <tr>
-                            <td>Municipio</td>
-                            <td><?php echo $municipiomapa;  ?></td>
-                            <td><?php echo $municipiooriginal; ?></td>
-                        </tr>
-                        <tr>
-                            <td>Localidad</td>
-                            <td><?php echo '';  ?></td>
-                            <td><?php echo $localidad; ?></td>
-                        </tr>
-                        <tr>
-                            <td>Longitud</td>
-                            <td><?php echo $lon; ?></td>
-                            <td><?php echo $longitudFormateada; ?></td>
-                        </tr>
-                        <tr>
-                            <td>Latitud</td>
-                            <td><?php echo $lat; ?></td>
-                            <td><?php echo $latitudFormateada;  ?></td>
-                        </tr>
-                        <tr>
-                            <td>Datum</td>
-                            <td><?php echo $datum; ?></td>
-                            <td><?php echo $datumoriginal;  ?></td>
-                        </tr>
-                        <tr>
-                            <td>Metodo de obtención de la georreferencia</td>
-                            <td><?php echo '';  ?></td>
-                            <td><?php echo $geoposmapagacetlitetiq;  ?></td>
-                        </tr>
-                        <tr>
-                            <td>Fuente georreferencia</td>
-                            <td><?php echo '';  ?></td>
-                            <td><?php echo $fuentegeorreferenciacion;  ?></td>
-                        </tr>
-                        <tr>
-                            <td>Tipo de vegetación</td>
-                            <td><?php echo $tipovegetacionmapa;  ?></td>
-                            <td><?php echo $tipovegetacion;  ?></td>
-                        </tr>
-                        <tr>
-                            <td>Altitud o porfundidad</td>
-                            <td><?php echo $altitudmapa; ?></td>
-                            <td><?php echo $altitudinicialejemplar;  ?></td>
-                        </tr>
-                    </tbody>
-                </table>
+                <div class="table-responsive-wrapper">
+                <table id="tabla-geografica" class="table table-striped table-hover table-bordered responsive-table-recurso">
+                        <thead>
+                            <tr>
+                                <th>Término</th>
+                                <th>Información asignada por CONABIO</th>
+                                <th>Información original</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>País</td>
+                                <td><?php echo $paismapa;  ?></td>
+                                <td><?php echo $paisoriginal; ?></td>
+                            </tr>
+                            <tr>
+                                <td>Estado</td>
+                                <td><?php echo $estadomapa;  ?></td>
+                                <td><?php echo $estadooriginal; ?></td>
+                            </tr>
+                            <tr>
+                                <td>Municipio</td>
+                                <td><?php echo $municipiomapa;  ?></td>
+                                <td><?php echo $municipiooriginal; ?></td>
+                            </tr>
+                            <tr>
+                                <td>Localidad</td>
+                                <td><?php echo '';  ?></td>
+                                <td><?php echo $localidad; ?></td>
+                            </tr>
+                            <tr>
+                                <td>Coordenadas geográficas</td>
+                                <td><?php echo "Longitud: " . $lon . ", latitud" . $lat; ?></td>
+                                <td><?php echo $coordenadaDescripcion; ?></td>
+                            </tr>
+                            <tr>
+                                <td>Datum</td>
+                                <td><?php echo $datum; ?></td>
+                                <td><?php echo $datumoriginal;  ?></td>
+                            </tr>
+                            <tr>
+                                <td>Metodo de obtención de la georreferencia</td>
+                                <td><?php echo '';  ?></td>
+                                <td><?php echo $geoposmapagacetlitetiq;  ?></td>
+                            </tr>
+                            <tr>
+                                <td>Fuente georreferencia</td>
+                                <td><?php echo '';  ?></td>
+                                <td><?php echo $fuentegeorreferenciacion;  ?></td>
+                            </tr>
+                            <tr>
+                                <td>Tipo de vegetación</td>
+                                <td><?php echo $tipovegetacionmapa;  ?></td>
+                                <td><?php echo $tipovegetacion;  ?></td>
+                            </tr>
+                            <tr>
+                                <td>Altitud o porfundidad</td>
+                                <td><?php echo $altitudmapa; ?></td>
+                                <td><?php echo $altitudinicialejemplar;  ?></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
 
 
                 <h2>Datos del recurso</h2>
-                <table id="tabla-recurso" class="table table-striped table-hover table-bordered">
+                <div class="table-responsive-wrapper">
+                <table id="tabla-recurso" class="table table-striped table-hover table-bordered responsive-table-recurso">
                     <tbody>
                         <tr>
                             <td>Observaciones sobre la información del ejemplar</td>
@@ -590,6 +618,7 @@
                         </tr>
                     </tbody>
                 </table>
+                </div>
             </div>
         </div>
     </div>
@@ -610,7 +639,10 @@
         document.addEventListener('DOMContentLoaded', function() {
             var lat = <?php echo json_encode($lat); ?>;
             var lon = <?php echo json_encode($lon); ?>;
-            var incertidumbre = <?php echo json_encode($incertidumbreXY); ?>;
+            // Asegúrate de que incertidumbre sea null si no hay valor o 0 si es 0
+            var incertidumbrePHP = <?php echo json_encode($incertidumbreXY, JSON_NUMERIC_CHECK); ?>;
+            var incertidumbre = (incertidumbrePHP === null || incertidumbrePHP === 0) ? null : incertidumbrePHP;
+
             var pais = <?php echo json_encode($paismapa); ?>;
             var estado = <?php echo json_encode($estadomapa); ?>;
             var municipio = <?php echo json_encode($municipiomapa); ?>;
@@ -647,16 +679,22 @@
                 markerColor: 'red'
             });
 
-            var incertidumbreNumerica = parseFloat(incertidumbre);
+            var marker = L.marker([lat, lon], {
+                icon: iconoAwesomeAzul
+            }).addTo(map);
+
+            var incertidumbreNumerica = (incertidumbre !== null) ? parseFloat(incertidumbre) : NaN;
             let contenidoPopup = '';
             let opcionesCirculo = {};
             let debeMostrarCirculo = false;
             let debeAjustarBounds = false;
-            let iconoParaUsar = iconoAwesomeAzul;
+            var circle = null;
 
             if (!isNaN(incertidumbreNumerica) && incertidumbreNumerica > 0) {
+                console.log("Incertidumbre detectada:", incertidumbreNumerica);
                 debeMostrarCirculo = true;
                 debeAjustarBounds = true;
+                let iconoParaUsar = iconoAwesomeAzul;
 
                 if (incertidumbreNumerica > umbralIncertidumbre) {
                     iconoParaUsar = iconoAwesomeRojo;
@@ -671,15 +709,9 @@
                  <div class="popup-warning">
                     <span class="warning-icon">${iconoAdvertencia}</span> <strong>${mensajeAdvertencia}</strong>
                 </div>
-                <div><strong>País:</strong> ${pais || 'N/A'}</div>
-                <div><strong>Estado:</strong> ${estado || 'N/A'}</div>
-                <div><strong>Municipio:</strong> ${municipio || 'N/A'}</div>
                 <div><strong>Incertidumbre geográfica:</strong> ${incertidumbreNumerica.toLocaleString()} m</div>
                 `;
-
                 } else {
-                    iconoParaUsar = iconoAwesomeAzul;
-                    console.log("Incertidumbre BAJA, dibujando círculo:", incertidumbreNumerica);
                     opcionesCirculo = {
                         radius: incertidumbreNumerica,
                         color: '#3388ff',
@@ -687,34 +719,23 @@
                         fillOpacity: 0.2
                     };
                     contenidoPopup = `
-                <div><strong>País:</strong> ${pais || 'N/A'}</div>
-                <div><strong>Estado:</strong> ${estado || 'N/A'}</div>
-                <div><strong>Municipio:</strong> ${municipio || 'N/A'}</div>
-                <div><strong>Incertidumbre:</strong> ${incertidumbreNumerica.toLocaleString()} m</div>
+                 <div><strong>Incertidumbre geográfica:</strong> ${incertidumbreNumerica.toLocaleString()} m</div>
                 `;
                 }
 
+                marker.setIcon(iconoParaUsar);
+
+                if (debeMostrarCirculo) {
+                    circle = L.circle([lat, lon], opcionesCirculo).addTo(map);
+                }
+
+                if (contenidoPopup) {
+                    marker.bindPopup(contenidoPopup);
+                    marker.openPopup();
+                }
+
             } else {
-                iconoParaUsar = iconoAwesomeAzul;
-                console.log("Sin radio de incertidumbre válido.");
-                debeMostrarCirculo = false;
-                debeAjustarBounds = false;
-                contenidoPopup = `
-                <div><strong>País:</strong> ${pais || 'N/A'}</div>
-                <div><strong>Estado:</strong> ${estado || 'N/A'}</div>
-                <div><strong>Municipio:</strong> ${municipio || 'N/A'}</div>
-            `;
-            }
-
-
-            var marker = L.marker([lat, lon], {
-                icon: iconoParaUsar
-            }).addTo(map);
-
-
-            var circle = null;
-            if (debeMostrarCirculo) {
-                circle = L.circle([lat, lon], opcionesCirculo).addTo(map);
+                console.log("Sin incertidumbre válida o es cero. No se muestra círculo ni popup.");
             }
 
 
@@ -724,12 +745,9 @@
                     padding: [50, 50]
                 });
             } else {
-                console.log("Estableciendo vista con setView (sin incertidumbre).");
+                console.log("Estableciendo vista con setView (sin incertidumbre o sin ajuste).");
                 map.setView([lat, lon], 12);
             }
-
-            marker.bindPopup(contenidoPopup);
-            marker.openPopup();
 
         });
     </script>
