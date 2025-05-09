@@ -14,18 +14,33 @@ class enciclovida
         $eight = array("DIPTE");
         $nine = array("ARACH", "ARTHR", "COLEO", "HEMIP", "HYMEN", "INSEC", "LEPID", "MYRIA", "ORTHO");
 
+        // Usar consultas preparadas para seguridad
         $sql = "SELECT idnombre
-                FROM snib.ejemplar_curatorial 
+                FROM snib.ejemplar_curatorial
                 INNER JOIN snib.nombre_taxonomia USING(llavenombre)
-                WHERE llaveejemplar = '{$llaveejemplar}'";
-        $result = $mysqli->query($sql);
-        $row = $result->fetch_array(MYSQLI_NUM);
-        $catalogo = "";
-        $idcat = 0;
-        $cod = 0;
-        $catalogo = preg_replace('/[0-9]+/', '', $row[0]);
-        $idcat = intval(preg_replace('/[^0-9]+/', '', $row[0]), 10);
+                WHERE llaveejemplar = ?"; // Usar marcador de posición
 
+        $idnombre = null; // Variable para almacenar el resultado
+        if ($stmt = $mysqli->prepare($sql)) {
+            $stmt->bind_param("s", $llaveejemplar); // Vincular el parámetro
+            $stmt->execute();
+            $stmt->bind_result($idnombre); // Vincular el resultado
+            $stmt->fetch();
+            $stmt->close();
+        } else {
+            // Manejar error de preparación si es necesario
+            // echo "Error preparando la consulta: " . $mysqli->error;
+            return ''; // O manejar el error de otra forma
+        }
+
+        if ($idnombre === null) {
+            // No se encontró el ejemplar o idnombre
+            return ''; // O manejar el error
+        }
+
+        $catalogo = preg_replace('/[0-9]+/', '', $idnombre);
+        $idcat = intval(preg_replace('/[^0-9]+/', '', $idnombre), 10);
+        $cod = 0;
 
         if (in_array($catalogo, $one)) {
             $cod = 1000000;
@@ -36,7 +51,7 @@ class enciclovida
         } else if (in_array($catalogo, $four)) {
             $cod = 4000000;
         } else if (in_array($catalogo, $five)) {
-            $cod = 6000000;
+            $cod = 6000000; // Ojo: Saltaste el 5000000, ¿es intencional? Mantengo tu lógica.
         } else if (in_array($catalogo, $six)) {
             $cod = 7000000;
         } else if (in_array($catalogo, $seven)) {
@@ -46,13 +61,17 @@ class enciclovida
         } else if (in_array($catalogo, $nine)) {
             $cod = 10000000;
         }
+
         $codNombre = $cod + $idcat;
-        $result->free();
+        // Ya no se necesita $result->free() porque usamos consultas preparadas
+
         return "http://www.enciclovida.mx/especies/{$codNombre}/comentarios/new?proveedor_id={$llaveejemplar}&tipo_proveedor=6";
     }
 
     function obtenResumen($mysqli, $llaveejemplar): array
     {
+        // --- Variables de inicialización ---
+        // (Se mantienen las mismas que antes, excepto las de lat/lon formateadas)
         $scientificName = $autor = $commonName = $region = $localidad = $procedenciaejemplar = $col = $ins = $lat = $lon = $fechacolecta = $colector =
             $datum = $ultimafechaactualizacion = $urlejemplar = $licenciauso = $formadecitar = $reino = $phylumdivision = $clase = $orden = $familia = $genero =
             $categoriainfraespecie = $fechadeterminacion = $numcatalogo = $numcolecta = $determinador = $obsusoinfo = $tipoPreparacion = $numeroindividuos =
@@ -65,10 +84,17 @@ class enciclovida
             $catdiccinfraespecieoriginal = $endemismo = $iucn = $cites = $nom059 = $prioritaria = $exoticainvasora = $paisoriginal = $estadooriginal =
             $municipiooriginal = $geoposmapagacetlitetiq = $usvserieVII = $altitudmapa = $altitudinicialejemplar = $paismapa = $estadomapa = $municipiomapa =
             $datumoriginal = $tipovegetacion = $fuentegeorreferenciacion = $tipovegetacionmapa = '';
-        $latitudFormateada = $longitudFormateada = $incertidumbreXY = '';
+        // --- NUEVA VARIABLE para la descripción combinada de coordenadas ---
+        $coordenadaDescripcion = '';
+        // --- VARIABLE MANTENIDA ---
+        $incertidumbreXY = '';
+
+
         try {
+            // --- NUEVA CONSULTA SQL ---
+            // (Asegúrate de que las comillas y escapes sean correctos para PHP)
             $sql = "SELECT
-                        especievalida, autorvalido, TRIM(BOTH ',' FROM REGEXP_REPLACE(nombrecomun, '[^,]*\\\\([^)]*\\\\),? ?', '')) as nombrecomun,
+                        especievalida, autorvalido, TRIM(BOTH ',' FROM REGEXP_REPLACE(nombrecomun, '[^,]*\\\\[[^)]*\\\\][^,]*,? ?', '')) as nombrecomun, -- Escapado para PHP
                         region, localidad, procedenciaejemplar, coleccion, institucion,
                         i.latitud, i.longitud, fechacolecta, colector,
                         i.datum,
@@ -92,73 +118,73 @@ class enciclovida
                         i.paismapa, i.estadomapa, i.municipiomapa,
                         g.datum AS datumoriginal,
                         t.tipovegetacion, f.fuentegeorreferenciacion,
+
+                        -- CASE para coordenada_descripcion (combinado)
                         CASE
                             WHEN c.observacionescoordenadasconabio LIKE 'Conversión de sexagesimal%' THEN
-                                IF (((g.latitudgrados IS NOT NULL AND g.latitudgrados<>999) OR (g.latitudminutos IS NOT NULL AND g.latitudminutos<>99) OR (g.latitudsegundos IS NOT NULL AND g.latitudsegundos<>99)),
-                                    CONCAT(
-                                      IF(g.latitudgrados IS NOT NULL AND g.latitudgrados<>999,CONCAT(g.latitudgrados,'°') ,''),
-                                      IF(g.latitudminutos IS NOT NULL AND g.latitudminutos<>99,CONCAT(g.latitudminutos,\"'\",''),
-                                        IF(g.latitudminutos= 99 AND g.latitudgrados IS NOT NULL AND g.latitudgrados <> 999 AND g.latitudsegundos IS NOT NULL AND g.latitudsegundos <> 99,CONCAT('0', \"'\",''),'')),
-                                      IF(g.latitudsegundos IS NOT NULL AND g.latitudsegundos<>99,CONCAT(g.latitudsegundos,'\"'),''),' ',g.nortesur),
-                                NULL)
+                                CONCAT(
+                                    IF (((g.latitudgrados IS NOT NULL AND g.latitudgrados<>999) OR (g.latitudminutos IS NOT NULL AND g.latitudminutos<>99) OR (g.latitudsegundos IS NOT NULL AND g.latitudsegundos<>99)),
+                                    CONCAT('latitud ',
+                                        IF(g.latitudgrados IS NOT NULL AND g.latitudgrados<>999,CONCAT(g.latitudgrados,'°') ,''),
+                                        IF(g.latitudminutos IS NOT NULL AND g.latitudminutos<>99,CONCAT(g.latitudminutos,\"'\"), -- Usar comilla simple en SQL
+                                            IF(g.latitudminutos= 99 AND g.latitudgrados IS NOT NULL AND g.latitudgrados <> 999 AND g.latitudsegundos IS NOT NULL AND g.latitudsegundos <> 99,CONCAT('0', \"'\"),'')), -- Usar comilla simple en SQL
+                                        IF(g.latitudsegundos IS NOT NULL AND g.latitudsegundos<>99,CONCAT(g.latitudsegundos,'\"'),''),' ',g.nortesur,', '),''),
+                                    IF (((g.longitudgrados IS NOT NULL AND g.longitudgrados<>999) OR (g.longitudminutos IS NOT NULL AND g.longitudminutos<>99) OR (g.longitudsegundos IS NOT NULL AND g.longitudsegundos<>99)),
+                                    CONCAT('longitud ',
+                                        IF(g.longitudgrados IS NOT NULL AND g.longitudgrados<>999,CONCAT(g.longitudgrados,'°') ,''),
+                                        IF(g.longitudminutos IS NOT NULL AND g.longitudminutos<>99,CONCAT(g.longitudminutos,\"'\"), -- Usar comilla simple en SQL
+                                            IF(g.longitudminutos= 99 AND g.longitudgrados IS NOT NULL AND g.longitudgrados <> 999 AND g.longitudsegundos IS NOT NULL AND g.longitudsegundos <> 99,CONCAT('0', \"'\"),'')), -- Usar comilla simple en SQL
+                                        IF(g.longitudsegundos IS NOT NULL AND g.longitudsegundos<>99,CONCAT(g.longitudsegundos,'\"'),''),' ',g.esteoeste),'')
+                                )
                             WHEN c.observacionescoordenadasconabio LIKE 'Conversión de UTM%' THEN
-                                CAST(g.utm_latitud AS CHAR)
+                                CONCAT(
+                                    IF(g.utm_latitud IS NOT NULL, CONCAT('latitud ', CAST(g.utm_latitud AS CHAR), ', '), ''),
+                                    IF(g.utm_longitud IS NOT NULL, CONCAT('longitud ', CAST(g.utm_longitud AS CHAR)), ''),
+                                    IF(g.utm_zona IS NOT NULL, CONCAT(' zona UTM ', CAST(g.utm_zona AS CHAR)), '')
+                                )
                             WHEN c.observacionescoordenadasconabio LIKE 'Grados decimales%' THEN
-                                SUBSTRING_INDEX(REPLACE(REPLACE(ST_AsText(g.coordenadaoriginal), 'POINT(', ''), ')', ''), ' ', -1)
+                                IF(g.coordenadaoriginal IS NOT NULL,
+                                    CONCAT('latitud ', SUBSTRING_INDEX(REPLACE(REPLACE(ST_AsText(g.coordenadaoriginal), 'POINT(', ''), ')', ''), ' ', -1),
+                                           ', longitud ', SUBSTRING_INDEX(SUBSTRING_INDEX(REPLACE(REPLACE(ST_AsText(g.coordenadaoriginal), 'POINT(', ''), ')', ''), ' ', 1), ' ', -1)),
+                                NULL)
                             WHEN c.observacionescoordenadasconabio LIKE 'Georreferenciado%' THEN
-                                SUBSTRING_INDEX(REPLACE(REPLACE(ST_AsText(g.coordenadaoriginal), 'POINT(', ''), ')', ''), ' ', -1)
+                                IF(g.coordenadaoriginal IS NOT NULL,
+                                    CONCAT('latitud ', SUBSTRING_INDEX(REPLACE(REPLACE(ST_AsText(g.coordenadaoriginal), 'POINT(', ''), ')', ''), ' ', -1),
+                                           ', longitud ', SUBSTRING_INDEX(SUBSTRING_INDEX(REPLACE(REPLACE(ST_AsText(g.coordenadaoriginal), 'POINT(', ''), ')', ''), ' ', 1), ' ', -1)),
+                                NULL)
                             WHEN c.observacionescoordenadasconabio LIKE 'Coordenada Georrectificada%' THEN
                                 CASE
-                                    WHEN (g.latitudgrados IS NOT NULL) THEN
-                                        IF (((g.latitudgrados IS NOT NULL AND g.latitudgrados<>999) OR (g.latitudminutos IS NOT NULL AND g.latitudminutos<>99) OR (g.latitudsegundos IS NOT NULL AND g.latitudsegundos<>99)),
-                                            CONCAT(
-                                              IF(g.latitudgrados IS NOT NULL AND g.latitudgrados<>999,CONCAT(g.latitudgrados,'°') ,''),
-                                              IF(g.latitudminutos IS NOT NULL AND g.latitudminutos<>99,CONCAT(g.latitudminutos,\"'\",''),
-                                                IF(g.latitudminutos= 99 AND g.latitudgrados IS NOT NULL AND g.latitudgrados <> 999 AND g.latitudsegundos IS NOT NULL AND g.latitudsegundos <> 99,CONCAT('0', \"'\",''),'')),
-                                              IF(g.latitudsegundos IS NOT NULL AND g.latitudsegundos<>99,CONCAT(g.latitudsegundos,'\"'),''),' ',g.nortesur),
-                                        NULL)
-                                    WHEN (((g.latitudgrados IS NULL) OR (g.latitudgrados = 99)) AND (g.coordenadaoriginal IS NULL)) THEN
-                                        CAST(g.utm_latitud AS CHAR)
-                                    WHEN (((g.latitudgrados IS NULL) OR (g.latitudgrados = 99)) AND (g.utm_latitud IS NULL)) THEN
-                                         SUBSTRING_INDEX(REPLACE(REPLACE(ST_AsText(g.coordenadaoriginal), 'POINT(', ''), ')', ''), ' ', -1)
+                                    WHEN (g.latitudgrados IS NOT NULL AND g.latitudgrados <> 999) THEN
+                                        CONCAT(
+                                            IF (((g.latitudgrados IS NOT NULL AND g.latitudgrados<>999) OR (g.latitudminutos IS NOT NULL AND g.latitudminutos<>99) OR (g.latitudsegundos IS NOT NULL AND g.latitudsegundos<>99)),
+                                            CONCAT('latitud ',
+                                                IF(g.latitudgrados IS NOT NULL AND g.latitudgrados<>999,CONCAT(g.latitudgrados,'°') ,''),
+                                                IF(g.latitudminutos IS NOT NULL AND g.latitudminutos<>99,CONCAT(g.latitudminutos,\"'\"), -- Usar comilla simple en SQL
+                                                    IF(g.latitudminutos= 99 AND g.latitudgrados IS NOT NULL AND g.latitudgrados <> 999 AND g.latitudsegundos IS NOT NULL AND g.latitudsegundos <> 99,CONCAT('0', \"'\"),'')), -- Usar comilla simple en SQL
+                                                IF(g.latitudsegundos IS NOT NULL AND g.latitudsegundos<>99,CONCAT(g.latitudsegundos,'\"'),''),' ',g.nortesur,', '),''),
+                                            IF (((g.longitudgrados IS NOT NULL AND g.longitudgrados<>999) OR (g.longitudminutos IS NOT NULL AND g.longitudminutos<>99) OR (g.longitudsegundos IS NOT NULL AND g.longitudsegundos<>99)),
+                                            CONCAT('longitud ',
+                                                IF(g.longitudgrados IS NOT NULL AND g.longitudgrados<>999,CONCAT(g.longitudgrados,'°') ,''),
+                                                IF(g.longitudminutos IS NOT NULL AND g.longitudminutos<>99,CONCAT(g.longitudminutos,\"'\"), -- Usar comilla simple en SQL
+                                                    IF(g.longitudminutos= 99 AND g.longitudgrados IS NOT NULL AND g.longitudgrados <> 999 AND g.longitudsegundos IS NOT NULL AND g.longitudsegundos <> 99,CONCAT('0', \"'\"),'')), -- Usar comilla simple en SQL
+                                                IF(g.longitudsegundos IS NOT NULL AND g.longitudsegundos<>99,CONCAT(g.longitudsegundos,'\"'),''),' ',g.esteoeste),'')
+                                        )
+                                    WHEN (((g.latitudgrados IS NULL) OR (g.latitudgrados = 999)) AND (g.coordenadaoriginal IS NULL) AND (g.utm_latitud IS NOT NULL)) THEN
+                                         CONCAT(
+                                             IF(g.utm_latitud IS NOT NULL, CONCAT('latitud ', CAST(g.utm_latitud AS CHAR), ', '), ''),
+                                             IF(g.utm_longitud IS NOT NULL, CONCAT('longitud ', CAST(g.utm_longitud AS CHAR)), ''),
+                                             IF(g.utm_zona IS NOT NULL, CONCAT(' zona UTM ', CAST(g.utm_zona AS CHAR)), '')
+                                         )
+                                    WHEN (((g.latitudgrados IS NULL) OR (g.latitudgrados = 999)) AND (g.utm_latitud IS NULL) AND (g.coordenadaoriginal IS NOT NULL)) THEN
+                                         IF(g.coordenadaoriginal IS NOT NULL,
+                                             CONCAT('latitud ', SUBSTRING_INDEX(REPLACE(REPLACE(ST_AsText(g.coordenadaoriginal), 'POINT(', ''), ')', ''), ' ', -1),
+                                                    ', longitud ', SUBSTRING_INDEX(SUBSTRING_INDEX(REPLACE(REPLACE(ST_AsText(g.coordenadaoriginal), 'POINT(', ''), ')', ''), ' ', 1), ' ', -1)),
+                                         NULL)
                                     ELSE NULL
                                 END
                             ELSE NULL
-                        END AS latitud_formateada,
-                        CASE
-                            WHEN c.observacionescoordenadasconabio LIKE 'Conversión de sexagesimal%' THEN
-                                IF (((g.longitudgrados IS NOT NULL AND g.longitudgrados<>999) OR (g.longitudminutos IS NOT NULL AND g.longitudminutos<>99) OR (g.longitudsegundos IS NOT NULL AND g.longitudsegundos<>99)),
-                                    CONCAT(
-                                      IF(g.longitudgrados IS NOT NULL AND g.longitudgrados<>999,CONCAT(g.longitudgrados,'°') ,''),
-                                      IF(g.longitudminutos IS NOT NULL AND g.longitudminutos<>99,CONCAT(g.longitudminutos,\"'\",''),
-                                        IF(g.longitudminutos= 99 AND g.longitudgrados IS NOT NULL AND g.longitudgrados <> 999 AND g.longitudsegundos IS NOT NULL AND g.longitudsegundos <> 99,CONCAT('0', \"'\",''),'')),
-                                      IF(g.longitudsegundos IS NOT NULL AND g.longitudsegundos<>99,CONCAT(g.longitudsegundos,'\"'),''),' ',g.esteoeste),
-                                NULL)
-                            WHEN c.observacionescoordenadasconabio LIKE 'Conversión de UTM%' THEN
-                                CAST(g.utm_longitud AS CHAR)
-                            WHEN c.observacionescoordenadasconabio LIKE 'Grados decimales%' THEN
-                                 SUBSTRING_INDEX(SUBSTRING_INDEX(REPLACE(REPLACE(ST_AsText(g.coordenadaoriginal), 'POINT(', ''), ')', ''), ' ', 1), ' ', -1)
-                            WHEN c.observacionescoordenadasconabio LIKE 'Georreferenciado%' THEN
-                                 SUBSTRING_INDEX(SUBSTRING_INDEX(REPLACE(REPLACE(ST_AsText(g.coordenadaoriginal), 'POINT(', ''), ')', ''), ' ', 1), ' ', -1)
-                            WHEN c.observacionescoordenadasconabio LIKE 'Coordenada Georrectificada%' THEN
-                                CASE
-                                    WHEN (g.latitudgrados IS NOT NULL) THEN
-                                        IF (((g.longitudgrados IS NOT NULL AND g.longitudgrados<>999) OR (g.longitudminutos IS NOT NULL AND g.longitudminutos<>99) OR (g.longitudsegundos IS NOT NULL AND g.longitudsegundos<>99)),
-                                            CONCAT(
-                                              IF(g.longitudgrados IS NOT NULL AND g.longitudgrados<>999,CONCAT(g.longitudgrados,'°') ,''),
-                                              IF(g.longitudminutos IS NOT NULL AND g.longitudminutos<>99,CONCAT(g.longitudminutos,\"'\",''),
-                                                IF(g.longitudminutos= 99 AND g.longitudgrados IS NOT NULL AND g.longitudgrados <> 999 AND g.longitudsegundos IS NOT NULL AND g.longitudsegundos <> 99,CONCAT('0', \"'\",''),'')),
-                                              IF(g.longitudsegundos IS NOT NULL AND g.longitudsegundos<>99,CONCAT(g.longitudsegundos,'\"'),''),' ',g.esteoeste),
-                                        NULL)
-                                    WHEN (((g.latitudgrados IS NULL) OR (g.latitudgrados = 99)) AND (g.coordenadaoriginal IS NULL)) THEN
-                                        CAST(g.utm_longitud AS CHAR)
-                                    WHEN (((g.latitudgrados IS NULL) OR (g.latitudgrados = 99)) AND (g.utm_latitud IS NULL)) THEN
-                                         SUBSTRING_INDEX(SUBSTRING_INDEX(REPLACE(REPLACE(ST_AsText(g.coordenadaoriginal), 'POINT(', ''), ')', ''), ' ', 1), ' ', -1)
-                                    ELSE NULL
-                                END
-                            ELSE NULL
-                        END AS longitud_formateada,
-                           
+                        END AS coordenada_descripcion,
+
                         v.tipovegetacionmapa, i.incertidumbreXY
                     FROM snib.informaciongeoportal_siya i
                         INNER JOIN snib.ejemplar_curatorial e ON i.idejemplar = e.llaveejemplar
@@ -167,17 +193,21 @@ class enciclovida
                         INNER JOIN snib.nombre n ON e.llavenombre = n.llavenombre
                         INNER JOIN snib.conabiogeografia cg using(llaveregionsitiosig)
                         INNER JOIN snib.fuentegeorreferenciacion f using(idfuentegeorreferenciacion)
-                        INNER JOIN snib.geografiaoriginal g using(llavesitio) 
+                        INNER JOIN snib.geografiaoriginal g using(llavesitio)
                         INNER JOIN snib.vegetacionprimariainegi v USING(idvegetacionprimariainegi)
                         INNER JOIN snib.regionoriginal r using(idregionoriginal)
                         INNER JOIN snib.tipovegetacion t ON e.idtipovegetacion = t.idtipovegetacion
                         INNER JOIN snib.v_conabioGeografia c ON cg.llaveregionsitiosig = c.llaveregionsitiosig
-                    WHERE i.idejemplar = ?;";
+                    WHERE i.idejemplar = ?;"; 
+
             $stmt = $mysqli->prepare($sql);
+            if ($stmt === false) {
+                 throw new Exception("Error preparando la consulta: " . $mysqli->error);
+            }
+
             $stmt->bind_param("s", $llaveejemplar);
             $stmt->execute();
             $stmt->bind_result(
-                // Variables originales
                 $scientificName,
                 $autor,
                 $commonName,
@@ -263,15 +293,14 @@ class enciclovida
                 $datumoriginal,
                 $tipovegetacion,
                 $fuentegeorreferenciacion,
-                $latitudFormateada,
-                $longitudFormateada,
+                $coordenadaDescripcion,
                 $tipovegetacionmapa,
                 $incertidumbreXY
             );
 
+
             if ($stmt->fetch()) {
                 $result = array(
-                    // Variables originales
                     $scientificName,
                     $autor,
                     $commonName,
@@ -357,18 +386,17 @@ class enciclovida
                     $datumoriginal,
                     $tipovegetacion,
                     $fuentegeorreferenciacion,
-                    $latitudFormateada,
-                    $longitudFormateada,
+                    $coordenadaDescripcion,
                     $tipovegetacionmapa,
                     $incertidumbreXY
                 );
             } else {
-                $result = array();
+                $result = array(); 
             }
             $stmt->close();
         } catch (Exception $e) {
-            $scientificName = '';
-            echo "Se produjo un error: " . $e->getMessage();
+            error_log("Error en obtenResumen: " . $e->getMessage());
+            $result = array(); 
         }
         return $result;
     }
@@ -381,22 +409,31 @@ class enciclovida
                     FROM snib.ejemplar_curatorial
                     INNER JOIN snib.proyecto USING(llaveproyecto) WHERE llaveejemplar = ?";
             $stmt = $mysqli->prepare($sql);
+            if ($stmt === false) {
+                 throw new Exception("Error preparando la consulta de proyecto: " . $mysqli->error);
+            }
             $stmt->bind_param("s", $llaveejemplar);
             $stmt->execute();
             $stmt->bind_result($titulo, $urlProyectoConabio, $urlOrigen);
             if ($stmt->fetch()) {
+                $urlProyectoConabio = htmlspecialchars($urlProyectoConabio, ENT_QUOTES, 'UTF-8');
+                $urlOrigen = htmlspecialchars($urlOrigen, ENT_QUOTES, 'UTF-8');
+                $titulo = htmlspecialchars($titulo, ENT_QUOTES, 'UTF-8');
+
                 if ($urlProyectoConabio != '') {
                     $urlProyecto = "<a href='$urlProyectoConabio' target='_blank'>$titulo</a>";
                 } else if ($urlOrigen != '') {
                     $urlProyecto = "<a href='$urlOrigen' target='_blank'>$titulo</a>";
-                } else $urlProyecto = $titulo;
+                } else {
+                    $urlProyecto = $titulo; 
+                }
+            } else {
+                 $urlProyecto = ''; 
             }
-            // cerramos el statement y la conexión
             $stmt->close();
         } catch (Exception $e) {
-            // Manejo de excepciones
-            $urlProyecto = '';
-            echo "Se produjo un error: " . $e->getMessage();
+            error_log("Error en obtenProyecto: " . $e->getMessage());
+            $urlProyecto = ''; 
         }
         return $urlProyecto;
     }
