@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="es">
 
@@ -13,97 +12,99 @@
     $urlComments = $enciclovida->ligaComentarios($mysqli, $llaveejemplar);
     list(
         $scientificName,
-                    $autor,
-                    $commonName,
-                    $region,
-                    $localidad,
-                    $procedenciaejemplar,
-                    $col,
-                    $ins,
-                    $lat,
-                    $lon,
-                    $fechacolecta,
-                    $colector,
-                    $datum,
-                    $ultimafechaactualizacion,
-                    $urlejemplar,
-                    $licenciauso,
-                    $formadecitar,
-                    $reino,
-                    $phylumdivision,
-                    $clase,
-                    $orden,
-                    $familia,
-                    $genero,
-                    $categoriainfraespecie,
-                    $fechadeterminacion,
-                    $numcatalogo,
-                    $numcolecta,
-                    $determinador,
-                    $obsusoinfo,
-                    $tipoPreparacion,
-                    $numeroindividuos,
-                    $persona,
-                    $reinocatvalido,
-                    $divisionphylumcatvalido,
-                    $clasecatvalido,
-                    $ordencatvalido,
-                    $familiacatvalido,
-                    $generocatvalido,
-                    $epitetoespecificocatvalido,
-                    $categoriainfraespeciecatvalido,
-                    $epitetoinfraespecificocatvalido,
-                    $reinooriginal,
-                    $divisionphylumoriginal,
-                    $claseoriginal,
-                    $ordenoriginal,
-                    $familiaoriginal,
-                    $generooriginal,
-                    $epitetoespecificooriginal,
-                    $epitetoinfraespecificooriginal,
-                    $categoriainfraespecieoriginal,
-                    $nombrevalidocatscat,
-                    $nombreoriginallimpioscat,
-                    $categoriacatscat,
-                    $categoriaoriginalscat,
-                    $autoranioespeciecat,
-                    $autoranioinfraespeciecat,
-                    $autoranioespecieoriginal,
-                    $autoranioinfraespecieoriginal,
-                    $estatusespeciecat,
-                    $estatusinfraespeciecat,
-                    $estatusespecieoriginal,
-                    $estatusinfraespecieoriginal,
-                    $catdiccespeciecat,
-                    $catdiccinfraespeciecat,
-                    $catdiccespecieoriginal,
-                    $catdiccinfraespecieoriginal,
-                    $endemismo,
-                    $iucn,
-                    $cites,
-                    $nom059,
-                    $prioritaria,
-                    $exoticainvasora,
-                    $paisoriginal,
-                    $estadooriginal,
-                    $municipiooriginal,
-                    $geoposmapagacetlitetiq,
-                    $usvserieVII,
-                    $altitudmapa,
-                    $altitudinicialejemplar,
-                    $paismapa,
-                    $estadomapa,
-                    $municipiomapa,
-                    $datumoriginal,
-                    $tipovegetacion,
-                    $fuentegeorreferenciacion,
-                    $coordenadaDescripcion,
-                    $tipovegetacionmapa,
-                    $incertidumbreXY
+        $autor,
+        $commonName,
+        $region,
+        $localidad,
+        $procedenciaejemplar,
+        $col,
+        $ins,
+        $lat,
+        $lon,
+        $fechacolecta,
+        $colector,
+        $datum,
+        $ultimafechaactualizacion,
+        $urlejemplar,
+        $licenciauso,
+        $formadecitar,
+        $reino,
+        $phylumdivision,
+        $clase,
+        $orden,
+        $familia,
+        $genero,
+        $categoriainfraespecie,
+        $fechadeterminacion,
+        $numcatalogo,
+        $numcolecta,
+        $determinador,
+        $obsusoinfo,
+        $tipoPreparacion,
+        $numeroindividuos,
+        $persona,
+        $reinocatvalido,
+        $divisionphylumcatvalido,
+        $clasecatvalido,
+        $ordencatvalido,
+        $familiacatvalido,
+        $generocatvalido,
+        $epitetoespecificocatvalido,
+        $categoriainfraespeciecatvalido,
+        $epitetoinfraespecificocatvalido,
+        $reinooriginal,
+        $divisionphylumoriginal,
+        $claseoriginal,
+        $ordenoriginal,
+        $familiaoriginal,
+        $generooriginal,
+        $epitetoespecificooriginal,
+        $epitetoinfraespecificooriginal,
+        $categoriainfraespecieoriginal,
+        $nombrevalidocatscat,
+        $nombreoriginallimpioscat,
+        $categoriacatscat,
+        $categoriaoriginalscat,
+        $autoranioespeciecat,
+        $autoranioinfraespeciecat,
+        $autoranioespecieoriginal,
+        $autoranioinfraespecieoriginal,
+        $estatusespeciecat,
+        $estatusinfraespeciecat,
+        $estatusespecieoriginal,
+        $estatusinfraespecieoriginal,
+        $catdiccespeciecat,
+        $catdiccinfraespeciecat,
+        $catdiccespecieoriginal,
+        $catdiccinfraespecieoriginal,
+        $endemismo,
+        $iucn,
+        $cites,
+        $nom059,
+        $prioritaria,
+        $exoticainvasora,
+        $paisoriginal,
+        $estadooriginal,
+        $municipiooriginal,
+        $geoposmapagacetlitetiq,
+        $usvserieVII,
+        $altitudmapa,
+        $altitudinicialejemplar,
+        $paismapa,
+        $estadomapa,
+        $municipiomapa,
+        $datumoriginal,
+        $tipovegetacion,
+        $fuentegeorreferenciacion,
+        $coordenadaDescripcion,
+        $tipovegetacionmapa,
+        $incertidumbreXY
 
     ) = $enciclovida->obtenResumen($mysqli, $llaveejemplar);
     $titulo = $enciclovida->obtenProyecto($mysqli, $llaveejemplar);
     $mysqli->close();
+
+    $coordenadas_validas_para_mapa = (isset($lat) && is_numeric($lat) && isset($lon) && is_numeric($lon));
 
     function tieneDatoSignificativo($value)
     {
@@ -247,11 +248,23 @@
                         <?php endif; ?>
 
                         <?php if (tieneDatoSignificativo($region)) : ?>
-                            <p><b>Ubicación:</b> <?php echo htmlspecialchars($region); ?></p>
+                            <?php
+                            $ubicacionCompleta = $region;
+                            if (isset($localidad) && tieneDatoSignificativo($localidad)) {
+                                $ubicacionCompleta .= " / " . $localidad;
+                            }
+                            ?>
+                            <p><b>Ubicación:</b> <?php echo htmlspecialchars($ubicacionCompleta); ?></p>
                         <?php endif; ?>
 
                         <?php if (tieneDatoSignificativo($region)) : ?>
-                            <p><b>Coordenadas geográficas:</b> <?php echo "Latitud " . $lon . ", longitud " . $lat; ?></p>
+                            <p><b>Coordenadas geográficas:</b> <?php
+                            if ($coordenadas_validas_para_mapa) {
+                                echo "Latitud " . htmlspecialchars($lat) . ", longitud " . htmlspecialchars($lon);
+                            } else {
+                                echo "Sin coordenadas";
+                            }
+                            ?></p>
                         <?php endif; ?>
 
                         <?php if (tieneDatoSignificativo($fechacolecta)) : ?>
@@ -295,6 +308,12 @@
 
                 <div class="row">
                     <div class="col-md-12" id="map">
+                        <?php
+                        // Si las coordenadas no son válidas desde PHP, podemos poner un mensaje aquí también
+                        if (!$coordenadas_validas_para_mapa) {
+                            echo '<p style="text-align: center; padding-top: 20px; color: red;">No se puede mostrar en el mapa.</p>';
+                        }
+                        ?>
                     </div>
                 </div>
 
@@ -532,8 +551,14 @@
                         </tr>
                         <tr>
                             <td>Coordenadas geográficas</td>
-                            <td><?php echo "Latitud " . $lon . ", longitud " . $lat; ?></td> 
-                            <td><?php echo $coordenadaDescripcion; ?></td>
+                            <td><?php
+                            if ($coordenadas_validas_para_mapa) {
+                                echo "Latitud " . htmlspecialchars($lat) . ", longitud " . htmlspecialchars($lon);
+                            } else {
+                                echo "Sin coordenadas";
+                            }
+                            ?> </td>
+                            <td><?php echo $coordenadaDescripcion; ?> </td>
                         </tr>
                         <tr>
                             <td>Datum</td>
@@ -607,6 +632,7 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {
+            var coordenadasValidasDesdePHP = <?php echo json_encode($coordenadas_validas_para_mapa); ?>;
             var lat = <?php echo json_encode($lat); ?>;
             var lon = <?php echo json_encode($lon); ?>;
             // Asegúrate de que incertidumbre sea null si no hay valor o 0 si es 0
@@ -619,6 +645,14 @@
 
             const umbralIncertidumbre = 50000;
             const iconoAdvertencia = '⚠️';
+
+            if (!coordenadasValidasDesdePHP) {
+                console.error("Coordenadas inválidas (según PHP). No se inicializará el mapa.");
+                // El mensaje ya se puso en el div 'map' desde PHP,
+                // o puedes actualizarlo aquí si prefieres:
+                // document.getElementById('map').innerHTML = '<p style="text-align: center; padding-top: 20px; color: red;">Mapa no disponible: Coordenadas no proporcionadas o inválidas.</p>';
+                return; // Detiene la ejecución del script del mapa
+            }
 
             if (typeof lat !== 'number' || typeof lon !== 'number' || isNaN(lat) || isNaN(lon)) {
                 console.error("Coordenadas inválidas para el mapa: ", lat, lon);
@@ -660,27 +694,28 @@
             let debeAjustarBounds = false;
             var circle = null;
 
+
             if (!isNaN(incertidumbreNumerica) && incertidumbreNumerica > 0) {
                 console.log("Incertidumbre detectada:", incertidumbreNumerica);
                 debeMostrarCirculo = true;
                 debeAjustarBounds = true;
-                let iconoParaUsar = iconoAwesomeAzul;
+                let iconoParaUsar = iconoAwesomeAzul; 
 
                 if (incertidumbreNumerica > umbralIncertidumbre) {
-                    iconoParaUsar = iconoAwesomeRojo;
+                    iconoParaUsar = iconoAwesomeRojo; 
                     opcionesCirculo = {
                         radius: incertidumbreNumerica,
                         color: '#ff0000',
                         fillColor: '#ff0000',
                         fillOpacity: 0.2
                     };
-                    const mensajeAdvertencia = 'Sobrepasa los límites de representación geoespacial.';
+                    const mensajeAdvertencia = 'Posible inconsistencia.';
                     contenidoPopup = `
-                 <div class="popup-warning">
+                    <div><strong>Incertidumbre geográfica:</strong> ${incertidumbreNumerica.toLocaleString()} m</div>
+                    <div class="popup-warning">
                     <span class="warning-icon">${iconoAdvertencia}</span> <strong>${mensajeAdvertencia}</strong>
-                </div>
-                <div><strong>Incertidumbre geográfica:</strong> ${incertidumbreNumerica.toLocaleString()} m</div>
-                `;
+                    </div>
+                    `;
                 } else {
                     opcionesCirculo = {
                         radius: incertidumbreNumerica,
@@ -689,8 +724,8 @@
                         fillOpacity: 0.2
                     };
                     contenidoPopup = `
-                 <div><strong>Incertidumbre geográfica:</strong> ${incertidumbreNumerica.toLocaleString()} m</div>
-                `;
+                    <div><strong>Incertidumbre geográfica:</strong> ${incertidumbreNumerica.toLocaleString()} m</div>
+                    `;
                 }
 
                 marker.setIcon(iconoParaUsar);
@@ -698,14 +733,19 @@
                 if (debeMostrarCirculo) {
                     circle = L.circle([lat, lon], opcionesCirculo).addTo(map);
                 }
-
-                if (contenidoPopup) {
-                    marker.bindPopup(contenidoPopup);
-                    marker.openPopup();
-                }
-
             } else {
-                console.log("Sin incertidumbre válida o es cero. No se muestra círculo ni popup.");
+                const textoIncertidumbreMostrar = "No proporcionada";
+                console.log(`Incertidumbre es ${incertidumbreNumerica === null ? 'null' : incertidumbreNumerica}. Se mostrará '${textoIncertidumbreMostrar}'. No se muestra círculo.`);
+
+                debeMostrarCirculo = false;       
+                contenidoPopup = `
+                <div><strong>Incertidumbre geográfica:</strong> ${textoIncertidumbreMostrar}</div>
+                `;
+            }
+
+            if (contenidoPopup) {
+                marker.bindPopup(contenidoPopup);
+                marker.openPopup();
             }
 
 
