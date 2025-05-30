@@ -83,7 +83,7 @@ class enciclovida
             $estatusespecieoriginal = $estatusinfraespecieoriginal = $catdiccespeciecat = $catdiccinfraespeciecat = $catdiccespecieoriginal =
             $catdiccinfraespecieoriginal = $endemismo = $iucn = $cites = $nom059 = $prioritaria = $exoticainvasora = $paisoriginal = $estadooriginal =
             $municipiooriginal = $geoposmapagacetlitetiq = $usvserieVII = $altitudmapa = $altitudinicialejemplar = $paismapa = $estadomapa = $municipiomapa =
-            $datumoriginal = $tipovegetacion = $fuentegeorreferenciacion = $tipovegetacionmapa = '';
+            $datumoriginal = $tipovegetacion = $fuentegeorreferenciacion = $tipovegetacionmapa = $observacionescoordenadasconabio = '';
         // --- NUEVA VARIABLE para la descripción combinada de coordenadas ---
         $coordenadaDescripcion = '';
         // --- VARIABLE MANTENIDA ---
@@ -185,7 +185,7 @@ class enciclovida
                             ELSE NULL
                         END AS coordenada_descripcion,
 
-                        v.tipovegetacionmapa, i.incertidumbreXY
+                        v.tipovegetacionmapa, i.incertidumbreXY, o.observacionescoordenadasconabio
                     FROM snib.informaciongeoportal_siya i
                         INNER JOIN snib.ejemplar_curatorial e ON i.idejemplar = e.llaveejemplar
                         INNER JOIN snib.tipopreparacion tp USING(idtipopreparacion)
@@ -198,6 +198,7 @@ class enciclovida
                         INNER JOIN snib.regionoriginal r using(idregionoriginal)
                         INNER JOIN snib.tipovegetacion t ON e.idtipovegetacion = t.idtipovegetacion
                         INNER JOIN snib.v_conabioGeografia c ON cg.llaveregionsitiosig = c.llaveregionsitiosig
+                        INNER JOIN snib.observacionescoordenadasconabio o ON cg.idobservacionescoordenadasconabio = o.idobservacionescoordenadasconabio
                     WHERE i.idejemplar = ?;"; 
 
             $stmt = $mysqli->prepare($sql);
@@ -295,7 +296,8 @@ class enciclovida
                 $fuentegeorreferenciacion,
                 $coordenadaDescripcion,
                 $tipovegetacionmapa,
-                $incertidumbreXY
+                $incertidumbreXY,
+                $observacionescoordenadasconabio
             );
 
 
@@ -388,7 +390,8 @@ class enciclovida
                     $fuentegeorreferenciacion,
                     $coordenadaDescripcion,
                     $tipovegetacionmapa,
-                    $incertidumbreXY
+                    $incertidumbreXY,
+                    $observacionescoordenadasconabio
                 );
             } else {
                 $result = array(); 

@@ -3,6 +3,7 @@
 
 <head>
     <?php
+    // ... (PHP head) ...
     include("../includes/head-tag-contents.php");
     include('connectdb.php');
     require 'functions.php';
@@ -98,7 +99,8 @@
         $fuentegeorreferenciacion,
         $coordenadaDescripcion,
         $tipovegetacionmapa,
-        $incertidumbreXY
+        $incertidumbreXY,
+        $observacionescoordenadasconabio
 
     ) = $enciclovida->obtenResumen($mysqli, $llaveejemplar);
     $titulo = $enciclovida->obtenProyecto($mysqli, $llaveejemplar);
@@ -127,6 +129,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/Leaflet.awesome-markers/2.0.2/leaflet.awesome-markers.css" integrity="sha512-cUoWMYmv4H9TGPZnझ्f9AFj7NnvDu3VVJctcw+5+246oDf0CLRh+jVIsiQbdxfjGkYPdIYzjBJpdDCDBePWAQ==" crossorigin="anonymous" referrerpolicy="no-referrer" />
     <style>
+        /* ... (tus estilos CSS se mantienen igual) ... */
         #map {
             height: 400px;
             width: 100%;
@@ -148,7 +151,7 @@
 
         #tabla-recurso tbody td:first-child {
             font-weight: bold;
-            width: 35%;/
+            width: 35%;
         }
 
         .table {
@@ -159,27 +162,6 @@
             margin-bottom: 0.2rem;
         }
 
-        .custom-warning-tooltip {
-            position: absolute;
-            background-color: #fff1cd;
-            color: rgb(255, 0, 0);
-            border: 1px solid #ffeeba;
-            padding: 8px 12px;
-            border-radius: 4px;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
-            font-size: 16px;
-            z-index: 1001;
-            max-width: 1200px;
-            pointer-events: none;
-            opacity: 0;
-            transition: opacity 0.2s ease-in-out;
-            white-space: normal;
-        }
-
-        .custom-warning-tooltip.visible {
-            opacity: 1;
-        }
-
         .leaflet-popup-content div {
             margin-bottom: 2px;
         }
@@ -188,9 +170,8 @@
             margin-bottom: 0;
         }
 
-
         .popup-warning {
-            color: rgb(252, 164, 0);
+            color: #FFA500; 
             margin-bottom: 10px !important;
             display: flex;
             align-items: center;
@@ -204,34 +185,58 @@
             max-width: 300px;
         }
 
-        .popup-warning {
-            color: #FFA500;
-            margin-bottom: 10px !important;
-            display: flex;
-            align-items: center;
-        }
-
-        .warning-icon {
+        .warning-icon { /* Usado en popups normales */
             font-size: 1.9em;
             margin-right: 5px;
             line-height: 1;
         }
 
-        .popup-warning strong {
-            margin-left: 5px;
+        .custom-info-divicon {
+            background: white;
+            padding: 10px 15px;
+            padding-right: 30px; 
+            border-radius: 6px;
+            box-shadow: 0 2px 7px rgba(0,0,0,0.45);
+            font-size: 14px;
+            font-family: Arial, Helvetica, sans-serif;
+            color: #333;
+            border: 1px solid #adadad;
+            white-space: nowrap;
+            text-align: center;
+            position: relative; 
+        }
+
+        .custom-info-divicon-close {
+            position: absolute;
+            top: 0px;
+            right: 3px;
+            font-size: 20px; 
+            font-weight: normal; 
+            color: #757575; 
+            text-decoration: none;
+            cursor: pointer;
+            padding: 5px; 
+            line-height: 1;
+            z-index: 10; 
+        }
+        .custom-info-divicon-close:hover {
+            color: #000000;
         }
     </style>
 </head>
 
 <body>
-    <?php include("../includes/navigation.php"); ?>
+    <?php 
+    // ... (PHP body) ...
+    include("../includes/navigation.php"); 
+    ?>
     <div class="container" style="padding-top:15px;">
         <div class="card">
             <div style="background-color: #9B2247; color:rgb(255, 255, 255); " class="card-header">
                 <h2 style="text-align:center; margin-top: 0; margin-bottom: 0;"><i><?php echo $nombrevalidocatscat; ?></i> <?php echo $autor; ?></h2>
             </div>
             <div class="card-body">
-
+                <!-- ... (HTML Body content) ... -->
                 <div class="row">
                     <div class="col-md-6">
 
@@ -257,14 +262,14 @@
                             <p><b>Ubicación:</b> <?php echo htmlspecialchars($ubicacionCompleta); ?></p>
                         <?php endif; ?>
 
-                        <?php if (tieneDatoSignificativo($region)) : ?>
+                        <?php if (tieneDatoSignificativo($region)) : // Se usa $region como proxy para mostrar coordenadas ?>
                             <p><b>Coordenadas geográficas:</b> <?php
-                            if ($coordenadas_validas_para_mapa) {
-                                echo "Latitud " . htmlspecialchars($lat) . ", longitud " . htmlspecialchars($lon);
-                            } else {
-                                echo "Sin coordenadas";
-                            }
-                            ?></p>
+                                                                if ($coordenadas_validas_para_mapa) {
+                                                                    echo "Latitud " . htmlspecialchars($lat) . ", longitud " . htmlspecialchars($lon);
+                                                                } else {
+                                                                    echo "Sin coordenadas";
+                                                                }
+                                                                ?></p>
                         <?php endif; ?>
 
                         <?php if (tieneDatoSignificativo($fechacolecta)) : ?>
@@ -309,16 +314,14 @@
                 <div class="row">
                     <div class="col-md-12" id="map">
                         <?php
-                        // Si las coordenadas no son válidas desde PHP, podemos poner un mensaje aquí también
                         if (!$coordenadas_validas_para_mapa) {
                             echo '<p style="text-align: center; padding-top: 20px; color: red;">No se puede mostrar en el mapa.</p>';
                         }
                         ?>
                     </div>
                 </div>
-
-
-                <h2>Información curatorial</h2>
+                <!-- ... (resto de las tablas HTML se mantienen igual) ... -->
+                 <h2>Información curatorial</h2>
 
                 <table id="tabla-geografica" class="table table-striped table-hover table-bordered">
                     <thead>
@@ -552,13 +555,13 @@
                         <tr>
                             <td>Coordenadas geográficas</td>
                             <td><?php
-                            if ($coordenadas_validas_para_mapa) {
-                                echo "Latitud " . htmlspecialchars($lat) . ", longitud " . htmlspecialchars($lon);
-                            } else {
-                                echo "Sin coordenadas";
-                            }
-                            ?> </td>
-                            <td><?php echo $coordenadaDescripcion; ?> </td>
+                                if ($coordenadas_validas_para_mapa) {
+                                    echo "Latitud " . htmlspecialchars($lat) . ", longitud " . htmlspecialchars($lon);
+                                } else {
+                                    echo "Sin coordenadas";
+                                }
+                                ?> </td>
+                            <td><?php echo $coordenadaDescripcion; ?></td>
                         </tr>
                         <tr>
                             <td>Datum</td>
@@ -628,34 +631,47 @@
         }
         gtag('js', new Date());
         gtag('config', 'UA-8226401-20');
+
+        var globalMapInstance = null;
+        var globalInfoDivMarker = null;
+
+        
+        function closeGlobalInfoDivMarker() {
+            console.log("closeGlobalInfoDivMarker called");
+            if (globalInfoDivMarker && globalMapInstance) {
+                if (globalMapInstance.hasLayer(globalInfoDivMarker)) {
+                    globalMapInstance.removeLayer(globalInfoDivMarker);
+                    console.log("GlobalInfoDivMarker removed from map");
+                }
+                globalInfoDivMarker = null; 
+            } else {
+                console.log("No globalInfoDivMarker or globalMapInstance to remove.");
+            }
+            return false; 
+        }
     </script>
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             var coordenadasValidasDesdePHP = <?php echo json_encode($coordenadas_validas_para_mapa); ?>;
-            var lat = <?php echo json_encode($lat); ?>;
-            var lon = <?php echo json_encode($lon); ?>;
-            // Asegúrate de que incertidumbre sea null si no hay valor o 0 si es 0
+            var latPHP = <?php echo json_encode($lat); ?>; 
+            var lonPHP = <?php echo json_encode($lon); ?>; 
             var incertidumbrePHP = <?php echo json_encode($incertidumbreXY, JSON_NUMERIC_CHECK); ?>;
             var incertidumbre = (incertidumbrePHP === null || incertidumbrePHP === 0) ? null : incertidumbrePHP;
+            var observacionesCoordenadasConabioJS = <?php echo json_encode($observacionescoordenadasconabio); ?>;
 
-            var pais = <?php echo json_encode($paismapa); ?>;
-            var estado = <?php echo json_encode($estadomapa); ?>;
-            var municipio = <?php echo json_encode($municipiomapa); ?>;
-
-            const umbralIncertidumbre = 50000;
-            const iconoAdvertencia = '⚠️';
+            const umbralIncertidumbre = 50000; 
 
             if (!coordenadasValidasDesdePHP) {
                 console.error("Coordenadas inválidas (según PHP). No se inicializará el mapa.");
-                // El mensaje ya se puso en el div 'map' desde PHP,
-                // o puedes actualizarlo aquí si prefieres:
-                // document.getElementById('map').innerHTML = '<p style="text-align: center; padding-top: 20px; color: red;">Mapa no disponible: Coordenadas no proporcionadas o inválidas.</p>';
-                return; // Detiene la ejecución del script del mapa
+                return;
             }
+            
+            const lat = parseFloat(latPHP);
+            const lon = parseFloat(lonPHP);
 
-            if (typeof lat !== 'number' || typeof lon !== 'number' || isNaN(lat) || isNaN(lon)) {
-                console.error("Coordenadas inválidas para el mapa: ", lat, lon);
+            if (isNaN(lat) || isNaN(lon)) {
+                console.error("Coordenadas inválidas para el mapa: ", latPHP, lonPHP);
                 document.getElementById('map').innerHTML = '<p style="color: red; text-align: center;">Error: No se pueden mostrar las coordenadas en el mapa.</p>';
                 return;
             }
@@ -663,7 +679,7 @@
             var map = L.map('map', {
                 minZoom: 1
             }).setView([lat, lon], 8);
-
+            globalMapInstance = map; 
             L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
                 attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
             }).addTo(map);
@@ -675,16 +691,22 @@
             const iconoAwesomeAzul = L.AwesomeMarkers.icon({
                 icon: 'circle',
                 prefix: 'fa',
-                markerColor: 'blue'
+                markerColor: 'blue',
+                iconSize: [35, 45], 
+                iconAnchor: [17, 42], 
+                popupAnchor: [1, -34]  
             });
             const iconoAwesomeRojo = L.AwesomeMarkers.icon({
                 icon: 'circle',
                 prefix: 'fa',
-                markerColor: 'red'
+                markerColor: 'red',
+                iconSize: [35, 45],
+                iconAnchor: [17, 42],
+                popupAnchor: [1, -34] 
             });
 
-            var marker = L.marker([lat, lon], {
-                icon: iconoAwesomeAzul
+            var mainMarker = L.marker([lat, lon], { 
+                icon: iconoAwesomeAzul 
             }).addTo(map);
 
             var incertidumbreNumerica = (incertidumbre !== null) ? parseFloat(incertidumbre) : NaN;
@@ -693,30 +715,81 @@
             let debeMostrarCirculo = false;
             let debeAjustarBounds = false;
             var circle = null;
+            
+            function clearLocalInfoDivMarker() { 
+                console.log("clearLocalInfoDivMarker called");
+                if (globalInfoDivMarker && globalMapInstance) {
+                    if (globalMapInstance.hasLayer(globalInfoDivMarker)) {
+                        globalMapInstance.removeLayer(globalInfoDivMarker);
+                    }
+                    globalInfoDivMarker = null;
+                }
+            }
 
 
             if (!isNaN(incertidumbreNumerica) && incertidumbreNumerica > 0) {
-                console.log("Incertidumbre detectada:", incertidumbreNumerica);
                 debeMostrarCirculo = true;
                 debeAjustarBounds = true;
-                let iconoParaUsar = iconoAwesomeAzul; 
+                let iconoParaUsar = iconoAwesomeAzul;
 
                 if (incertidumbreNumerica > umbralIncertidumbre) {
-                    iconoParaUsar = iconoAwesomeRojo; 
-                    opcionesCirculo = {
-                        radius: incertidumbreNumerica,
-                        color: '#ff0000',
-                        fillColor: '#ff0000',
-                        fillOpacity: 0.2
-                    };
-                    const mensajeAdvertencia = 'Posible inconsistencia.';
-                    contenidoPopup = `
-                    <div><strong>Incertidumbre geográfica:</strong> ${incertidumbreNumerica.toLocaleString()} m</div>
-                    <div class="popup-warning">
-                    <span class="warning-icon">${iconoAdvertencia}</span> <strong>${mensajeAdvertencia}</strong>
-                    </div>
-                    `;
+
+                    /* const esGeorreferenciadoConabioInbio = 
+                        observacionesCoordenadasConabioJS === 'Georreferenciado en la Conabio' ||
+                        observacionesCoordenadasConabioJS === 'Georreferenciado en el INBIO';
+
+                    if (esGeorreferenciadoConabioInbio) { 
+                        iconoParaUsar = iconoAwesomeAzul;
+                        opcionesCirculo = {
+                            radius: incertidumbreNumerica,
+                            color: '#3388ff', 
+                            fillColor: '#3388ff',
+                            fillOpacity: 0.2
+                        };
+                        contenidoPopup = `
+                            <div><strong>Incertidumbre geográfica:</strong> ${incertidumbreNumerica.toLocaleString()} m</div>
+                            <div class="popup-warning">
+                                <span class="warning-icon fas fa-exclamation-triangle"></span>
+                                <strong>Posible inconsistencia</strong>
+                            </div>
+                        `;
+                        clearLocalInfoDivMarker(); 
+                    } else {  */
+                        iconoParaUsar = iconoAwesomeRojo;
+                        opcionesCirculo = {
+                            radius: incertidumbreNumerica,
+                            color: '#ff0000', 
+                            fillColor: '#ff0000',
+                            fillOpacity: 0.2
+                        };
+                        
+                        clearLocalInfoDivMarker(); 
+                        
+                        const divIconText = `Incertidumbre geográfica: ${incertidumbreNumerica.toLocaleString()} m`;
+                        const divIconHTML = `
+                            <a href="#" onclick="return closeGlobalInfoDivMarker();" class="custom-info-divicon-close" title="Cerrar">×</a>
+                            ${divIconText}
+                        `;
+
+                        const customDivIcon = L.divIcon({
+                            className: 'custom-info-divicon',
+                            html: divIconHTML,
+                            iconSize: [300, 45], // Ajustar [ancho, alto] según el contenido y padding
+                                                 // El alto debe ser suficiente para el texto y el botón de cerrar
+                            iconAnchor: [150, 90] // [ancho/2, alto_icono + offset_deseado_hacia_arriba]
+                                                 // Si alto_icono es 35, y queremos 15px arriba de la punta del marker: 35+15=50
+                        });
+                        
+                        globalInfoDivMarker = L.marker([lat, lon], { 
+                            icon: customDivIcon, 
+                            zIndexOffset: 1000
+                        }).addTo(map); 
+                        console.log("GlobalInfoDivMarker created and added to map");
+                        
+                        contenidoPopup = ''; 
+                    /* } */
                 } else {
+                    iconoParaUsar = iconoAwesomeAzul;
                     opcionesCirculo = {
                         radius: incertidumbreNumerica,
                         color: '#3388ff',
@@ -724,43 +797,43 @@
                         fillOpacity: 0.2
                     };
                     contenidoPopup = `
-                    <div><strong>Incertidumbre geográfica:</strong> ${incertidumbreNumerica.toLocaleString()} m</div>
+                        <div><strong>Incertidumbre geográfica:</strong> ${incertidumbreNumerica.toLocaleString()} m</div>
                     `;
+                    clearLocalInfoDivMarker();
                 }
 
-                marker.setIcon(iconoParaUsar);
+                mainMarker.setIcon(iconoParaUsar);
 
                 if (debeMostrarCirculo) {
                     circle = L.circle([lat, lon], opcionesCirculo).addTo(map);
                 }
-            } else {
-                const textoIncertidumbreMostrar = "No proporcionada";
-                console.log(`Incertidumbre es ${incertidumbreNumerica === null ? 'null' : incertidumbreNumerica}. Se mostrará '${textoIncertidumbreMostrar}'. No se muestra círculo.`);
 
-                debeMostrarCirculo = false;       
+            } else { 
+                const textoIncertidumbreMostrar = "No proporcionada";
+                debeMostrarCirculo = false;
                 contenidoPopup = `
-                <div><strong>Incertidumbre geográfica:</strong> ${textoIncertidumbreMostrar}</div>
+                    <div><strong>Incertidumbre geográfica:</strong> ${textoIncertidumbreMostrar}</div>
                 `;
+                clearLocalInfoDivMarker();
             }
 
             if (contenidoPopup) {
-                marker.bindPopup(contenidoPopup);
-                marker.openPopup();
+                mainMarker.bindPopup(contenidoPopup);
+                if (!globalInfoDivMarker) { // Usar la variable global para la condición
+                    mainMarker.openPopup();
+                }
+            } else if (mainMarker.getPopup()) { 
+                mainMarker.unbindPopup();
             }
 
-
             if (debeAjustarBounds && circle) {
-                console.log("Ajustando vista a los límites del círculo.");
                 map.fitBounds(circle.getBounds(), {
                     padding: [50, 50]
                 });
             } else {
-                console.log("Estableciendo vista con setView (sin incertidumbre o sin ajuste).");
                 map.setView([lat, lon], 12);
             }
-
         });
     </script>
 </body>
-
 </html>
