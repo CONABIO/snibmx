@@ -3,7 +3,6 @@ class enciclovida
 {
     function ligaComentarios($mysqli, $llaveejemplar): string
     {
-        //arreglos de los diferentes catalogos [01-Echinodermata, 02-Crustaceos, 03-Hongos, 04-Invertebrados, 05-Plantas, 06-Algas, 07-Vertebrados, 08-Diptera, 09-Arthropoda]
         $one = array("ECHIN", "ANIM");
         $two = array("CRUST");
         $three = array("FUNGI");
@@ -14,28 +13,25 @@ class enciclovida
         $eight = array("DIPTE");
         $nine = array("ARACH", "ARTHR", "COLEO", "HEMIP", "HYMEN", "INSEC", "LEPID", "MYRIA", "ORTHO");
 
-        // Usar consultas preparadas para seguridad
         $sql = "SELECT idnombre
                 FROM snib.ejemplar_curatorial
                 INNER JOIN snib.nombre_taxonomia USING(llavenombre)
-                WHERE llaveejemplar = ?"; // Usar marcador de posición
+                WHERE llaveejemplar = ?"; 
 
-        $idnombre = null; // Variable para almacenar el resultado
+        $idnombre = null; 
         if ($stmt = $mysqli->prepare($sql)) {
-            $stmt->bind_param("s", $llaveejemplar); // Vincular el parámetro
+            $stmt->bind_param("s", $llaveejemplar); 
             $stmt->execute();
-            $stmt->bind_result($idnombre); // Vincular el resultado
+            $stmt->bind_result($idnombre); 
             $stmt->fetch();
             $stmt->close();
         } else {
-            // Manejar error de preparación si es necesario
-            // echo "Error preparando la consulta: " . $mysqli->error;
-            return ''; // O manejar el error de otra forma
+            
+            return ''; 
         }
 
         if ($idnombre === null) {
-            // No se encontró el ejemplar o idnombre
-            return ''; // O manejar el error
+            return ''; 
         }
 
         $catalogo = preg_replace('/[0-9]+/', '', $idnombre);
@@ -51,7 +47,7 @@ class enciclovida
         } else if (in_array($catalogo, $four)) {
             $cod = 4000000;
         } else if (in_array($catalogo, $five)) {
-            $cod = 6000000; // Ojo: Saltaste el 5000000, ¿es intencional? Mantengo tu lógica.
+            $cod = 6000000; 
         } else if (in_array($catalogo, $six)) {
             $cod = 7000000;
         } else if (in_array($catalogo, $seven)) {
@@ -63,15 +59,13 @@ class enciclovida
         }
 
         $codNombre = $cod + $idcat;
-        // Ya no se necesita $result->free() porque usamos consultas preparadas
 
         return "http://www.enciclovida.mx/especies/{$codNombre}/comentarios/new?proveedor_id={$llaveejemplar}&tipo_proveedor=6";
     }
 
     function obtenResumen($mysqli, $llaveejemplar): array
     {
-        // --- Variables de inicialización ---
-        // (Se mantienen las mismas que antes, excepto las de lat/lon formateadas)
+        
         $scientificName = $autor = $commonName = $region = $localidad = $procedenciaejemplar = $col = $ins = $lat = $lon = $fechacolecta = $colector =
             $datum = $ultimafechaactualizacion = $urlejemplar = $licenciauso = $formadecitar = $reino = $phylumdivision = $clase = $orden = $familia = $genero =
             $categoriainfraespecie = $fechadeterminacion = $numcatalogo = $numcolecta = $determinador = $obsusoinfo = $tipoPreparacion = $numeroindividuos =
@@ -84,15 +78,10 @@ class enciclovida
             $catdiccinfraespecieoriginal = $endemismo = $iucn = $cites = $nom059 = $prioritaria = $exoticainvasora = $paisoriginal = $estadooriginal =
             $municipiooriginal = $geoposmapagacetlitetiq = $usvserieVII = $altitudmapa = $altitudinicialejemplar = $paismapa = $estadomapa = $municipiomapa =
             $datumoriginal = $tipovegetacion = $fuentegeorreferenciacion = $tipovegetacionmapa = $observacionescoordenadasconabio = '';
-        // --- NUEVA VARIABLE para la descripción combinada de coordenadas ---
-        $coordenadaDescripcion = '';
-        // --- VARIABLE MANTENIDA ---
-        $incertidumbreXY = '';
+        $coordenadaDescripcion = $incertidumbreXY = $urlorigen = $tipositio = '' ;
 
 
         try {
-            // --- NUEVA CONSULTA SQL ---
-            // (Asegúrate de que las comillas y escapes sean correctos para PHP)
             $sql = "SELECT
                         especievalida, autorvalido, TRIM(BOTH ',' FROM REGEXP_REPLACE(nombrecomun, '[^,]*\\\\[[^)]*\\\\][^,]*,? ?', '')) as nombrecomun, -- Escapado para PHP
                         region, localidad, procedenciaejemplar, coleccion, institucion,
@@ -119,7 +108,6 @@ class enciclovida
                         g.datum AS datumoriginal,
                         t.tipovegetacion, f.fuentegeorreferenciacion,
 
-                        -- CASE para coordenada_descripcion (combinado)
                         CASE
                             WHEN c.observacionescoordenadasconabio LIKE 'Conversión de sexagesimal%' THEN
                                 CONCAT(
@@ -185,7 +173,7 @@ class enciclovida
                             ELSE NULL
                         END AS coordenada_descripcion,
 
-                        v.tipovegetacionmapa, i.incertidumbreXY, o.observacionescoordenadasconabio
+                        v.tipovegetacionmapa, i.incertidumbreXY, o.observacionescoordenadasconabio, i.urlorigen, g.tipositio
                     FROM snib.informaciongeoportal_siya i
                         INNER JOIN snib.ejemplar_curatorial e ON i.idejemplar = e.llaveejemplar
                         INNER JOIN snib.tipopreparacion tp USING(idtipopreparacion)
@@ -297,7 +285,9 @@ class enciclovida
                 $coordenadaDescripcion,
                 $tipovegetacionmapa,
                 $incertidumbreXY,
-                $observacionescoordenadasconabio
+                $observacionescoordenadasconabio,
+                $urlorigen,
+                $tipositio
             );
 
 
@@ -391,7 +381,9 @@ class enciclovida
                     $coordenadaDescripcion,
                     $tipovegetacionmapa,
                     $incertidumbreXY,
-                    $observacionescoordenadasconabio
+                    $observacionescoordenadasconabio,
+                    $urlorigen,
+                    $tipositio
                 );
             } else {
                 $result = array(); 
