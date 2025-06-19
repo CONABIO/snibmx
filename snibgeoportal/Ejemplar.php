@@ -9,8 +9,49 @@
     require 'functions.php';
 
     $llaveejemplar = isset($_GET['id']) ? $_GET['id'] : '';
+
+
+    //VALIDACION DE ESTADOREGISTRO
+    $mensaje_alerta = '';
+
+    if (strlen($llaveejemplar) != 32) {
+        $mensaje_alerta = '<div class="alert alert-danger" role="alert" >' .
+            '<b>El identificador ' . htmlspecialchars($llaveejemplar) . ', no es un identificador válido para el SNIB.</b>' .
+            '</div>';
+    } else {
+        mysqli_next_result($mysqli);
+        if ($stmt = $mysqli->prepare("SELECT e.llaveejemplar, e.actualizadopor, e.estadoregistro FROM snib.ejemplar_curatorial e where llaveejemplar = ?")) {
+            $stmt->bind_param("s", $llaveejemplar);
+            $stmt->execute();
+            $result = $stmt->get_result();
+            $datosEjemplar = $result->fetch_array(MYSQLI_NUM);
+            $conteosEjemplares = $result->num_rows;
+            $stmt->close();
+
+            if ($conteosEjemplares == 0) {
+                $mensaje_alerta = '<div class="alert alert-danger" role="alert" >' .
+                    '<b>El identificador ' . htmlspecialchars($llaveejemplar) . ', no es un identificador perteneciente al SNIB.</b>' .
+                    '</div>';
+            } else {
+                if ($datosEjemplar[2] != "" and $datosEjemplar[1] == "") {
+                    $mensaje_alerta = '<div class="alert alert-danger" role="alert" >' .
+                        '<b>El identificador ' . htmlspecialchars($llaveejemplar) . ' ya no se encuentra activo en la base del SNIB por el siguiente motivo: ' . htmlspecialchars($datosEjemplar[2]) . '.</b>' .
+                        '</div>';
+                } else if ($datosEjemplar[1] != "") {
+                    $mensaje_alerta = '<div class="alert alert-warning" role="alert" >' .
+                        '<b>El identificador proporcionado (' . htmlspecialchars($llaveejemplar) . ') fue actualizado en la base del SNIB por el ejemplar con identificador ' . htmlspecialchars($datosEjemplar[1]) . '. A continuación se presenta la información del ejemplar con el nuevo identificador.</b>' .
+                        '</div>';
+                    $llaveejemplar = $datosEjemplar[1];
+                }
+            }
+        }
+    }
+
+
+
     $enciclovida = new enciclovida();
     $urlComments = $enciclovida->ligaComentarios($mysqli, $llaveejemplar);
+<<<<<<< Updated upstream
     list(
         $scientificName,
                     $autor,
@@ -104,6 +145,111 @@
     ) = $enciclovida->obtenResumen($mysqli, $llaveejemplar);
     $titulo = $enciclovida->obtenProyecto($mysqli, $llaveejemplar);
     $mysqli->close();
+=======
+    if (strpos($mensaje_alerta, 'alert-danger') === false) {
+        $enciclovida = new enciclovida();
+        $urlComments = $enciclovida->ligaComentarios($mysqli, $llaveejemplar);
+        list(
+            $scientificName,
+            $autor,
+            $commonName,
+            $region,
+            $localidad,
+            $procedenciaejemplar,
+            $col,
+            $ins,
+            $lat,
+            $lon,
+            $fechacolecta,
+            $colector,
+            $datum,
+            $ultimafechaactualizacion,
+            $urlejemplar,
+            $licenciauso,
+            $formadecitar,
+            $reino,
+            $phylumdivision,
+            $clase,
+            $orden,
+            $familia,
+            $genero,
+            $categoriainfraespecie,
+            $fechadeterminacion,
+            $numcatalogo,
+            $numcolecta,
+            $determinador,
+            $obsusoinfo,
+            $tipoPreparacion,
+            $numeroindividuos,
+            $persona,
+            $reinocatvalido,
+            $divisionphylumcatvalido,
+            $clasecatvalido,
+            $ordencatvalido,
+            $familiacatvalido,
+            $generocatvalido,
+            $epitetoespecificocatvalido,
+            $categoriainfraespeciecatvalido,
+            $epitetoinfraespecificocatvalido,
+            $reinooriginal,
+            $divisionphylumoriginal,
+            $claseoriginal,
+            $ordenoriginal,
+            $familiaoriginal,
+            $generooriginal,
+            $epitetoespecificooriginal,
+            $epitetoinfraespecificooriginal,
+            $categoriainfraespecieoriginal,
+            $nombrevalidocatscat,
+            $nombreoriginallimpioscat,
+            $categoriacatscat,
+            $categoriaoriginalscat,
+            $autoranioespeciecat,
+            $autoranioinfraespeciecat,
+            $autoranioespecieoriginal,
+            $autoranioinfraespecieoriginal,
+            $estatusespeciecat,
+            $estatusinfraespeciecat,
+            $estatusespecieoriginal,
+            $estatusinfraespecieoriginal,
+            $catdiccespeciecat,
+            $catdiccinfraespeciecat,
+            $catdiccespecieoriginal,
+            $catdiccinfraespecieoriginal,
+            $endemismo,
+            $iucn,
+            $cites,
+            $nom059,
+            $prioritaria,
+            $exoticainvasora,
+            $paisoriginal,
+            $estadooriginal,
+            $municipiooriginal,
+            $geoposmapagacetlitetiq,
+            $usvserieVII,
+            $altitudmapa,
+            $altitudinicialejemplar,
+            $paismapa,
+            $estadomapa,
+            $municipiomapa,
+            $datumoriginal,
+            $tipovegetacion,
+            $fuentegeorreferenciacion,
+            $coordenadaDescripcion,
+            $tipovegetacionmapa,
+            $incertidumbreXY,
+            $observacionescoordenadasconabio,
+            $urlorigen,
+            $tipositio
+
+        ) = $enciclovida->obtenResumen($mysqli, $llaveejemplar);
+        $titulo = $enciclovida->obtenProyecto($mysqli, $llaveejemplar);
+        $mysqli->close();
+        $coordenadas_validas_para_mapa = (isset($lat) && is_numeric($lat) && isset($lon) && is_numeric($lon));
+    } else {
+        $coordenadas_validas_para_mapa = false;
+    }
+>>>>>>> Stashed changes
 
     function tieneDatoSignificativo($value)
     {
@@ -125,6 +271,7 @@
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/Leaflet.awesome-markers/2.0.2/leaflet.awesome-markers.css" integrity="sha512-cUoWMYmv4H9TGPZnझ्f9AFj7NnvDu3VVJctcw+5+246oDf0CLRh+jVIsiQbdxfjGkYPdIYzjBJpdDCDBePWAQ==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+
     <style>
         #map {
             height: 400px;
@@ -189,7 +336,11 @@
 
 
         .popup-warning {
+<<<<<<< Updated upstream
             color: rgb(252, 164, 0);
+=======
+            color: #FFA500;
+>>>>>>> Stashed changes
             margin-bottom: 10px !important;
             display: flex;
             align-items: center;
@@ -203,6 +354,7 @@
             max-width: 300px;
         }
 
+<<<<<<< Updated upstream
         .popup-warning {
             color: #FFA500;
             margin-bottom: 10px !important;
@@ -210,27 +362,103 @@
             align-items: center;
         }
 
+=======
+>>>>>>> Stashed changes
         .warning-icon {
             font-size: 1.9em;
             margin-right: 5px;
             line-height: 1;
         }
 
+<<<<<<< Updated upstream
         .popup-warning strong {
             margin-left: 5px;
+=======
+        .custom-info-divicon {
+            background: white;
+            padding: 10px 15px;
+            padding-right: 30px;
+            border-radius: 6px;
+            box-shadow: 0 2px 7px rgba(0, 0, 0, 0.45);
+            font-size: 14px;
+            font-family: Arial, Helvetica, sans-serif;
+            color: #333;
+            border: 1px solid #adadad;
+            white-space: nowrap;
+            text-align: center;
+            position: relative;
+        }
+
+        .custom-info-divicon-close {
+            position: absolute;
+            top: 0px;
+            right: 3px;
+            font-size: 20px;
+            font-weight: normal;
+            color: #757575;
+            text-decoration: none;
+            cursor: pointer;
+            padding: 5px;
+            line-height: 1;
+            z-index: 10;
+        }
+
+        .custom-info-divicon-close:hover {
+            color: #000000;
+>>>>>>> Stashed changes
+        }
+
+        #floating-download-btn {
+            position: fixed;
+            right: 30px;
+            top: 90px;
+            z-index: 1000;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            transition: transform 0.2s;
+            border-radius: 30px;
+        }
+
+        #floating-download-btn:hover {
+            transform: scale(1.05);
         }
     </style>
 </head>
 
 <body>
+<<<<<<< Updated upstream
     <?php include("../includes/navigation.php"); ?>
+=======
+    <?php
+    include("../includes/navigation.php");
+    ?>
+
+
+    <button id="floating-download-btn" class="btn" style="background-color: #9B2247; color: white;">
+        <i class="fa fa-download"></i>
+    </button>
+
+>>>>>>> Stashed changes
     <div class="container" style="padding-top:15px;">
+
+        <?php
+        if (!empty($mensaje_alerta)) {
+            echo $mensaje_alerta;
+            if (strpos($mensaje_alerta, 'alert-danger') !== false) {
+                echo '</div></body></html>';
+                exit;
+            }
+        }
+        ?>
+
         <div class="card">
             <div style="background-color: #9B2247; color:rgb(255, 255, 255); " class="card-header">
                 <h2 style="text-align:center; margin-top: 0; margin-bottom: 0;"><i><?php echo $nombrevalidocatscat; ?></i> <?php echo $autor; ?></h2>
             </div>
             <div class="card-body">
+<<<<<<< Updated upstream
 
+=======
+>>>>>>> Stashed changes
                 <div class="row">
                     <div class="col-md-6">
 
@@ -251,7 +479,17 @@
                         <?php endif; ?>
 
                         <?php if (tieneDatoSignificativo($region)) : ?>
+<<<<<<< Updated upstream
                             <p><b>Coordenadas geográficas:</b> <?php echo "Latitud " . $lon . ", longitud " . $lat; ?></p>
+=======
+                            <p><b>Coordenadas geográficas:</b> <?php
+                                                                if ($coordenadas_validas_para_mapa) {
+                                                                    echo "Latitud " . htmlspecialchars($lat) . ", longitud " . htmlspecialchars($lon);
+                                                                } else {
+                                                                    echo "Sin coordenadas";
+                                                                }
+                                                                ?></p>
+>>>>>>> Stashed changes
                         <?php endif; ?>
 
                         <?php if (tieneDatoSignificativo($fechacolecta)) : ?>
@@ -291,14 +529,18 @@
                         <?php endif; ?>
                         <br>
                     </div>
+
                 </div>
 
                 <div class="row">
                     <div class="col-md-12" id="map">
                     </div>
                 </div>
+<<<<<<< Updated upstream
 
 
+=======
+>>>>>>> Stashed changes
                 <h2>Información curatorial</h2>
 
                 <table id="tabla-geografica" class="table table-striped table-hover table-bordered">
@@ -541,7 +783,7 @@
                             <td><?php echo $datumoriginal;  ?></td>
                         </tr>
                         <tr>
-                            <td>Metodo de obtención de la georreferencia</td>
+                            <td>Método de obtención de la georreferencia</td>
                             <td><?php echo '';  ?></td>
                             <td><?php echo $geoposmapagacetlitetiq;  ?></td>
                         </tr>
@@ -556,9 +798,14 @@
                             <td><?php echo $tipovegetacion;  ?></td>
                         </tr>
                         <tr>
-                            <td>Altitud o porfundidad</td>
+                            <td>Altitud o profundidad</td>
                             <td><?php echo $altitudmapa; ?></td>
                             <td><?php echo $altitudinicialejemplar;  ?></td>
+                        </tr>
+                        <tr>
+                            <td>Tipo sitio</td>
+                            <td><?php echo ''; ?></td>
+                            <td><?php echo $tipositio;  ?></td>
                         </tr>
                     </tbody>
                 </table>
@@ -570,6 +817,10 @@
                         <tr>
                             <td>Observaciones sobre la información del ejemplar</td>
                             <td><?php echo $obsusoinfo;  ?></td>
+                        </tr>
+                        <tr>
+                            <td>Url de origen</td>
+                            <td><a href="<?php echo $urlorigen; ?>" target="_blank"><?php echo $urlorigen; ?></a></td>
                         </tr>
                         <tr>
                             <td>Url del ejemplar</td>
@@ -603,22 +854,61 @@
         }
         gtag('js', new Date());
         gtag('config', 'UA-8226401-20');
+<<<<<<< Updated upstream
+=======
+
+        var globalMapInstance = null;
+        var globalInfoDivMarker = null;
+
+
+        function closeGlobalInfoDivMarker() {
+            console.log("closeGlobalInfoDivMarker called");
+            if (globalInfoDivMarker && globalMapInstance) {
+                if (globalMapInstance.hasLayer(globalInfoDivMarker)) {
+                    globalMapInstance.removeLayer(globalInfoDivMarker);
+                    console.log("GlobalInfoDivMarker removed from map");
+                }
+                globalInfoDivMarker = null;
+            } else {
+                console.log("No globalInfoDivMarker or globalMapInstance to remove.");
+            }
+            return false;
+        }
+>>>>>>> Stashed changes
     </script>
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {
+<<<<<<< Updated upstream
             var lat = <?php echo json_encode($lat); ?>;
             var lon = <?php echo json_encode($lon); ?>;
             // Asegúrate de que incertidumbre sea null si no hay valor o 0 si es 0
+=======
+            var coordenadasValidasDesdePHP = <?php echo json_encode($coordenadas_validas_para_mapa); ?>;
+            var latPHP = <?php echo json_encode($lat); ?>;
+            var lonPHP = <?php echo json_encode($lon); ?>;
+>>>>>>> Stashed changes
             var incertidumbrePHP = <?php echo json_encode($incertidumbreXY, JSON_NUMERIC_CHECK); ?>;
             var incertidumbre = (incertidumbrePHP === null || incertidumbrePHP === 0) ? null : incertidumbrePHP;
 
+<<<<<<< Updated upstream
             var pais = <?php echo json_encode($paismapa); ?>;
             var estado = <?php echo json_encode($estadomapa); ?>;
             var municipio = <?php echo json_encode($municipiomapa); ?>;
 
             const umbralIncertidumbre = 50000;
             const iconoAdvertencia = '⚠️';
+=======
+            const umbralIncertidumbre = 50000;
+
+            if (!coordenadasValidasDesdePHP) {
+                console.error("Coordenadas inválidas (según PHP). No se inicializará el mapa.");
+                return;
+            }
+
+            const lat = parseFloat(latPHP);
+            const lon = parseFloat(lonPHP);
+>>>>>>> Stashed changes
 
             if (typeof lat !== 'number' || typeof lon !== 'number' || isNaN(lat) || isNaN(lon)) {
                 console.error("Coordenadas inválidas para el mapa: ", lat, lon);
@@ -629,7 +919,11 @@
             var map = L.map('map', {
                 minZoom: 1
             }).setView([lat, lon], 8);
+<<<<<<< Updated upstream
 
+=======
+            globalMapInstance = map;
+>>>>>>> Stashed changes
             L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
                 attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
             }).addTo(map);
@@ -641,15 +935,32 @@
             const iconoAwesomeAzul = L.AwesomeMarkers.icon({
                 icon: 'circle',
                 prefix: 'fa',
+<<<<<<< Updated upstream
                 markerColor: 'blue'
+=======
+                markerColor: 'blue',
+                iconSize: [35, 45],
+                iconAnchor: [17, 42],
+                popupAnchor: [1, -34]
+>>>>>>> Stashed changes
             });
             const iconoAwesomeRojo = L.AwesomeMarkers.icon({
                 icon: 'circle',
                 prefix: 'fa',
+<<<<<<< Updated upstream
                 markerColor: 'red'
             });
 
             var marker = L.marker([lat, lon], {
+=======
+                markerColor: 'red',
+                iconSize: [35, 45],
+                iconAnchor: [17, 42],
+                popupAnchor: [1, -34]
+            });
+
+            var mainMarker = L.marker([lat, lon], {
+>>>>>>> Stashed changes
                 icon: iconoAwesomeAzul
             }).addTo(map);
 
@@ -659,6 +970,48 @@
             let debeMostrarCirculo = false;
             let debeAjustarBounds = false;
             var circle = null;
+<<<<<<< Updated upstream
+=======
+
+
+            function mostrarDivIncertidumbre() {
+                if (globalInfoDivMarker) {
+                    return;
+                }
+                let textoIncertidumbre;
+                if (!isNaN(incertidumbreNumerica) && incertidumbreNumerica > 0) {
+                    textoIncertidumbre = `Incertidumbre geográfica: ${incertidumbreNumerica.toLocaleString()} m`;
+                } else {
+                    textoIncertidumbre = `Incertidumbre geográfica: No proporcionada`;
+                }
+                const divIconHTML = `
+                    <a href="#" onclick="closeGlobalInfoDivMarker(); return false;" class="custom-info-divicon-close" title="Cerrar">×</a>
+                    ${textoIncertidumbre}
+                `;
+                const customDivIcon = L.divIcon({
+                    className: 'custom-info-divicon',
+                    html: divIconHTML,
+                    iconSize: [300, 45],
+                    iconAnchor: [150, 90]
+                });
+                globalInfoDivMarker = L.marker([lat, lon], {
+                    icon: customDivIcon,
+                    zIndexOffset: 1000
+                }).addTo(map);
+            }
+
+
+            function clearLocalInfoDivMarker() {
+                console.log("clearLocalInfoDivMarker called");
+                if (globalInfoDivMarker && globalMapInstance) {
+                    if (globalMapInstance.hasLayer(globalInfoDivMarker)) {
+                        globalMapInstance.removeLayer(globalInfoDivMarker);
+                    }
+                    globalInfoDivMarker = null;
+                }
+            }
+
+>>>>>>> Stashed changes
 
             if (!isNaN(incertidumbreNumerica) && incertidumbreNumerica > 0) {
                 console.log("Incertidumbre detectada:", incertidumbreNumerica);
@@ -667,13 +1020,40 @@
                 let iconoParaUsar = iconoAwesomeAzul;
 
                 if (incertidumbreNumerica > umbralIncertidumbre) {
+<<<<<<< Updated upstream
                     iconoParaUsar = iconoAwesomeRojo;
+=======
+
+                    /* const esGeorreferenciadoConabioInbio = 
+                        observacionesCoordenadasConabioJS === 'Georreferenciado en la Conabio' ||
+                        observacionesCoordenadasConabioJS === 'Georreferenciado en el INBIO';
+
+                    if (esGeorreferenciadoConabioInbio) { 
+                        iconoParaUsar = iconoAwesomeAzul;
+                        opcionesCirculo = {
+                            radius: incertidumbreNumerica,
+                            color: '#3388ff', 
+                            fillColor: '#3388ff',
+                            fillOpacity: 0.2
+                        };
+                        contenidoPopup = `
+                            <div><strong>Incertidumbre geográfica:</strong> ${incertidumbreNumerica.toLocaleString()} m</div>
+                            <div class="popup-warning">
+                                <span class="warning-icon fas fa-exclamation-triangle"></span>
+                                <strong>Posible inconsistencia</strong>
+                            </div>
+                        `;
+                        clearLocalInfoDivMarker(); 
+                    } else {  */
+                    iconoParaUsar = iconoAwesomeAzul;
+>>>>>>> Stashed changes
                     opcionesCirculo = {
                         radius: incertidumbreNumerica,
                         color: '#ff0000',
                         fillColor: '#ff0000',
                         fillOpacity: 0.2
                     };
+<<<<<<< Updated upstream
                     const mensajeAdvertencia = 'Sobrepasa los límites de representación geoespacial.';
                     contenidoPopup = `
                  <div class="popup-warning">
@@ -681,6 +1061,31 @@
                 </div>
                 <div><strong>Incertidumbre geográfica:</strong> ${incertidumbreNumerica.toLocaleString()} m</div>
                 `;
+=======
+
+                    clearLocalInfoDivMarker();
+
+                    const divIconText = `Incertidumbre geográfica: ${incertidumbreNumerica.toLocaleString()} m`;
+                    const divIconHTML = `
+                            <a href="#" onclick="return closeGlobalInfoDivMarker();" class="custom-info-divicon-close" title="Cerrar">×</a>
+                            ${divIconText}
+                        `;
+
+                    const customDivIcon = L.divIcon({
+                        className: 'custom-info-divicon',
+                        html: divIconHTML,
+                        iconSize: [300, 45],
+                        iconAnchor: [150, 90]
+                    });
+
+                    globalInfoDivMarker = L.marker([lat, lon], {
+                        icon: customDivIcon,
+                        zIndexOffset: 1000
+                    }).addTo(map);
+                    console.log("GlobalInfoDivMarker created and added to map");
+
+                    contenidoPopup = '';
+>>>>>>> Stashed changes
                 } else {
                     opcionesCirculo = {
                         radius: incertidumbreNumerica,
@@ -688,10 +1093,40 @@
                         fillColor: '#3388ff',
                         fillOpacity: 0.2
                     };
+<<<<<<< Updated upstream
                     contenidoPopup = `
                  <div><strong>Incertidumbre geográfica:</strong> ${incertidumbreNumerica.toLocaleString()} m</div>
                 `;
+=======
+
+                    clearLocalInfoDivMarker();
+
+                    const divIconText = `Incertidumbre geográfica: ${incertidumbreNumerica.toLocaleString()} m`;
+                    const divIconHTML = `
+                            <a href="#" onclick="closeGlobalInfoDivMarker(); return false;" class="custom-info-divicon-close" title="Cerrar">×</a>
+                            ${divIconText}
+                        `;
+
+                    const customDivIcon = L.divIcon({
+                        className: 'custom-info-divicon',
+                        html: divIconHTML,
+                        iconSize: [260, 45],
+                        iconAnchor: [130, 90]
+                    });
+
+                    globalInfoDivMarker = L.marker([lat, lon], {
+                        icon: customDivIcon,
+                        zIndexOffset: 1000
+                    }).addTo(map);
+
+                    contenidoPopup = '';
+>>>>>>> Stashed changes
                 }
+                mostrarDivIncertidumbre();
+
+                mainMarker.on('click', function() {
+                    mostrarDivIncertidumbre();
+                });
 
                 marker.setIcon(iconoParaUsar);
 
@@ -699,6 +1134,7 @@
                     circle = L.circle([lat, lon], opcionesCirculo).addTo(map);
                 }
 
+<<<<<<< Updated upstream
                 if (contenidoPopup) {
                     marker.bindPopup(contenidoPopup);
                     marker.openPopup();
@@ -708,6 +1144,47 @@
                 console.log("Sin incertidumbre válida o es cero. No se muestra círculo ni popup.");
             }
 
+=======
+            } else {
+                debeMostrarCirculo = false;
+                clearLocalInfoDivMarker();
+                const divIconText = `Incertidumbre geográfica: No proporcionada`;
+                const divIconHTML = `
+                        <a href="#" onclick="closeGlobalInfoDivMarker(); return false;" class="custom-info-divicon-close" title="Cerrar">×</a>
+                        ${divIconText}
+                    `;
+
+                const customDivIcon = L.divIcon({
+                    className: 'custom-info-divicon',
+                    html: divIconHTML,
+                    iconSize: [300, 45],
+                    iconAnchor: [150, 90]
+                });
+
+                globalInfoDivMarker = L.marker([lat, lon], {
+                    icon: customDivIcon,
+                    zIndexOffset: 1000
+                }).addTo(map);
+
+                contenidoPopup = '';
+
+                mostrarDivIncertidumbre();
+
+                mainMarker.on('click', function() {
+                    mostrarDivIncertidumbre();
+                });
+
+            }
+
+            if (contenidoPopup) {
+                mainMarker.bindPopup(contenidoPopup);
+                if (!globalInfoDivMarker) {
+                    mainMarker.openPopup();
+                }
+            } else if (mainMarker.getPopup()) {
+                mainMarker.unbindPopup();
+            }
+>>>>>>> Stashed changes
 
             if (debeAjustarBounds && circle) {
                 console.log("Ajustando vista a los límites del círculo.");
@@ -720,7 +1197,175 @@
             }
 
         });
+
+
+
+
+        const botonDescarga = document.getElementById('floating-download-btn');
+
+        <?php if (!empty($mensaje_alerta) && strpos($mensaje_alerta, 'alert-danger') !== false) : ?>
+            if (botonDescarga) {
+                botonDescarga.style.display = 'none';
+            }
+        <?php else: ?>
+
+            <?php
+            $ubicacionCompleta = '';
+            if (isset($region) && tieneDatoSignificativo($region)) {
+                $ubicacionCompleta = $region;
+                if (isset($localidad) && tieneDatoSignificativo($localidad)) {
+                    $ubicacionCompleta .= " / " . $localidad;
+                }
+            }
+
+
+            $catalogoConabio = '';
+            if (isset($catdiccinfraespeciecat) && $catdiccinfraespeciecat !== '') {
+                $catalogoConabio = $catdiccinfraespeciecat;
+            } elseif (isset($catdiccespeciecat)) {
+                $catalogoConabio = $catdiccespeciecat;
+            }
+
+            $catalogoOriginal = '';
+            if (isset($catdiccinfraespecieoriginal) && $catdiccinfraespecieoriginal !== '') {
+                $catalogoOriginal = $catdiccinfraespecieoriginal;
+            } elseif (isset($catdiccespecieoriginal)) {
+                $catalogoOriginal = $catdiccespecieoriginal;
+            }
+            ?>
+            
+
+            if (botonDescarga) {
+                const todosLosDatos = {
+                    "llaveEjemplar": <?php echo json_encode($llaveejemplar ?? null); ?>,
+                    "nombreComun": <?php echo json_encode($commonName ?? null); ?>,
+                    "ubicacion": <?php echo json_encode($ubicacionCompleta ?? null); ?>,
+                    "latitud": <?php echo json_encode($lat ?? null); ?>,
+                    "longitud": <?php echo json_encode($lon ?? null); ?>,
+                    "proyecto": <?php echo json_encode(strip_tags($titulo ?? '') ?? null); ?>,
+                    "procedenciaEjemplar": <?php echo json_encode(null); ?>,
+                    "procedenciaEjemplarOriginal": <?php echo json_encode($procedenciaejemplar ?? null); ?>,
+                    "coleccion": <?php echo json_encode($col ?? null); ?>,
+                    "coleccionOriginal": <?php echo json_encode($col ?? null); ?>,
+                    "institucion": <?php echo json_encode($ins ?? null); ?>,
+                    "institucionOriginal": <?php echo json_encode($ins ?? null); ?>,
+                    "numeroCatalogo": <?php echo json_encode(null); ?>,
+                    "numeroCatalogoOriginal": <?php echo json_encode($numcatalogo ?? null); ?>,
+                    "numeroColecta": <?php echo json_encode(null); ?>,
+                    "numeroColectaOriginal": <?php echo json_encode($numcolecta ?? null); ?>,
+                    "numeroIndividuos": <?php echo json_encode(null); ?>,
+                    "numeroIndividuosOriginal": <?php echo json_encode($numeroindividuos ?? null); ?>,
+                    "colector": <?php echo json_encode(null); ?>,
+                    "colectorOriginal": <?php echo json_encode($colector ?? null); ?>,
+                    "fechaColecta": <?php echo json_encode(null); ?>,
+                    "fechaColectaOriginal": <?php echo json_encode($fechacolecta ?? null); ?>,
+                    "determinador": <?php echo json_encode(null); ?>,
+                    "determinadorOriginal": <?php echo json_encode($determinador ?? null); ?>,
+                    "fechaDeterminacion": <?php echo json_encode(null); ?>,
+                    "fechaDeterminacionOriginal": <?php echo json_encode($fechadeterminacion ?? null); ?>,
+                    "tipoPreparacion": <?php echo json_encode(null); ?>,
+                    "tipoPreparacionOriginal": <?php echo json_encode($tipoPreparacion ?? null); ?>,
+                    "reino": <?php echo json_encode($reinocatvalido ?? null); ?>,
+                    "reinoOriginal": <?php echo json_encode($reinooriginal ?? null); ?>,
+                    "phylum": <?php echo json_encode($divisionphylumcatvalido ?? null); ?>,
+                    "phylumOriginal": <?php echo json_encode($divisionphylumoriginal ?? null); ?>,
+                    "clase": <?php echo json_encode($clasecatvalido ?? null); ?>,
+                    "claseOriginal": <?php echo json_encode($claseoriginal ?? null); ?>,
+                    "orden": <?php echo json_encode($ordencatvalido ?? null); ?>,
+                    "ordenOriginal": <?php echo json_encode($ordenoriginal ?? null); ?>,
+                    "familia": <?php echo json_encode($familiacatvalido ?? null); ?>,
+                    "familiaOriginal": <?php echo json_encode($familiaoriginal ?? null); ?>,
+                    "genero": <?php echo json_encode($generocatvalido ?? null); ?>,
+                    "generoOriginal": <?php echo json_encode($generooriginal ?? null); ?>,
+                    "epitetoEspecifico": <?php echo json_encode($epitetoespecificocatvalido ?? null); ?>,
+                    "epitetoEspecificoOriginal": <?php echo json_encode($epitetoespecificooriginal ?? null); ?>,
+                    "epitetoInfraespecifico": <?php echo json_encode($epitetoinfraespecificocatvalido ?? null); ?>,
+                    "epitetoInfraespecificoOriginal": <?php echo json_encode($epitetoinfraespecificooriginal ?? null); ?>,
+                    "categoriaInfraespecie": <?php echo json_encode($categoriainfraespeciecatvalido ?? null); ?>,
+                    "categoriaInfraespecieOriginal": <?php echo json_encode($categoriainfraespecieoriginal ?? null); ?>,
+                    "nombreCientifico": <?php echo json_encode($nombrevalidocatscat ?? null); ?>,
+                    "nombreCientificoOriginal": <?php echo json_encode($nombreoriginallimpioscat ?? null); ?>,
+                    "nombreCientificoOriginal": <?php echo json_encode($nombreoriginallimpioscat ?? null); ?>,
+                    "catalogoAutoridad": <?php echo json_encode($catalogoConabio ?? null); ?>,
+                    "catalogoAutoridadOriginal": <?php echo json_encode($catalogoOriginal ?? null); ?>,
+                    "origen": <?php echo json_encode($endemismo ?? null); ?>,
+                    "origenOriginal": <?php echo json_encode(null); ?>,
+                    "iucn": <?php echo json_encode($iucn ?? null); ?>,
+                    "iucnOriginal": <?php echo json_encode(null); ?>,
+                    "cites": <?php echo json_encode($cites ?? null); ?>,
+                    "citesOriginal": <?php echo json_encode(null); ?>,
+                    "nom059": <?php echo json_encode($nom059 ?? null); ?>,
+                    "nom059Original": <?php echo json_encode(null); ?>,
+                    "especiePrioritaria": <?php echo json_encode($prioritaria ?? null); ?>,
+                    "especiePrioritariaOriginal": <?php echo json_encode(null); ?>,
+                    "especieInvasora": <?php echo json_encode($exoticainvasora ?? null); ?>,
+                    "especieInvasoraOriginal": <?php echo json_encode(null); ?>,
+                    "pais": <?php echo json_encode($paismapa ?? null); ?>,
+                    "paisOriginal": <?php echo json_encode($paisoriginal ?? null); ?>,
+                    "estado": <?php echo json_encode($estadomapa ?? null); ?>,
+                    "estadoOriginal": <?php echo json_encode($estadooriginal ?? null); ?>,
+                    "municipio": <?php echo json_encode($municipiomapa ?? null); ?>,
+                    "municipioOriginal": <?php echo json_encode($municipiooriginal ?? null); ?>,
+                    "localidad": <?php echo json_encode(null); ?>,
+                    "localidadOriginal": <?php echo json_encode($localidad ?? null); ?>,
+                    "datum": <?php echo json_encode($datum ?? null); ?>,
+                    "datumOriginal": <?php echo json_encode($datumoriginal ?? null); ?>,
+                    "metodoObtencionGeorreferencia": <?php echo json_encode(null); ?>,
+                    "metodoObtencionGeorreferenciaOriginal": <?php echo json_encode($geoposmapagacetlitetiq ?? null); ?>,
+                    "fuenteGeorreferenciacion": <?php echo json_encode(null); ?>,
+                    "fuenteGeorreferenciacionOriginal": <?php echo json_encode($fuentegeorreferenciacion ?? null); ?>,
+                    "tipoVegetacion": <?php echo json_encode($tipovegetacionmapa ?? null); ?>,
+                    "tipoVegetacionOriginal": <?php echo json_encode($tipovegetacion ?? null); ?>,
+                    "altitud": <?php echo json_encode($altitudmapa ?? null); ?>,
+                    "altitudOriginal": <?php echo json_encode($altitudinicialejemplar ?? null); ?>,
+                    "observaciones": <?php echo json_encode($obsusoinfo ?? null); ?>,
+                    "URL_del_ejemplar": <?php echo json_encode($urlejemplar ?? null); ?>,
+                    "URL_de_origen": <?php echo json_encode($urlorigen ?? null); ?>,
+                    "fechaActualizacion": <?php echo json_encode($ultimafechaactualizacion ?? null); ?>, 
+                    "licencia_de_uso": <?php echo json_encode($licenciauso ?? null); ?>, 
+                    "forma_de_citar": <?php echo json_encode($formadecitar ?? null); ?>, 
+                    
+                };
+
+                function convertirObjetoA_CSV_Estricto(datos) {
+                    const escaparCSV = (valor) => {
+                        let str = String(valor ?? "");
+                        str = str.replace(/"/g, '""');
+                        return `"${str}"`;
+                    };
+                    const encabezados = Object.keys(datos).map(key => escaparCSV(key));
+                    const valores = Object.values(datos).map(val => escaparCSV(val));
+                    return [encabezados.join(','), valores.join(',')].join('\n');
+                }
+
+                function descargarCSV(csvContenido, nombreArchivo) {
+                    const blob = new Blob(["\uFEFF" + csvContenido], {
+                        type: 'text/csv;charset=utf-8;'
+                    });
+                    const link = document.createElement("a");
+                    if (link.download !== undefined) {
+                        const url = URL.createObjectURL(blob);
+                        link.setAttribute("href", url);
+                        link.setAttribute("download", nombreArchivo);
+                        link.style.visibility = 'hidden';
+                        document.body.appendChild(link);
+                        link.click();
+                        document.body.removeChild(link);
+                        URL.revokeObjectURL(url);
+                    }
+                }
+
+                botonDescarga.addEventListener('click', function() {
+                    const contenidoCSV = convertirObjetoA_CSV_Estricto(todosLosDatos);
+                    const nombreArchivo = `Ejemplar_${todosLosDatos["llaveEjemplar"] || 'sin_id'}.csv`;
+                    descargarCSV(contenidoCSV, nombreArchivo);
+                });
+            }
+        <?php endif; ?>
     </script>
+
+
+
 </body>
 
 </html>
