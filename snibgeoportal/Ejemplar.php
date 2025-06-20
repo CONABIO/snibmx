@@ -292,7 +292,7 @@
     ?>
 
 
-    <button id="floating-download-btn" class="btn" style="background-color: #9B2247; color: white;">
+    <button id="floating-download-btn" class="btn" style="background-color: #9B2247; color: white;">Descargar información (csv)
         <i class="fa fa-download"></i>
     </button>
 
