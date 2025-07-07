@@ -172,8 +172,7 @@
     ?>
     <link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.2.0/css/font-awesome.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/Leaflet.awesome-markers/2.0.2/leaflet.awesome-markers.css" integrity="sha512-cUoWMYmv4H9TGPZnझ्f9AFj7NnvDu3VVJctcw+5+246oDf0CLRh+jVIsiQbdxfjGkYPdIYzjBJpdDCDBePWAQ==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/Leaflet.awesome-markers/2.0.2/leaflet.awesome-markers.css" crossorigin="anonymous" referrerpolicy="no-referrer" />
 
     <style>
         #map {
@@ -282,6 +281,63 @@
 
         #floating-download-btn:hover {
             transform: scale(1.05);
+        }
+
+        #map {
+            height: 400px;
+            width: 100%;
+            /* Elimina el margin-bottom que estaba creando el espacio */
+            margin-bottom: 0;
+            /* Asegura que no haya padding que cree espacio */
+            padding: 0;
+            /* Opcional: añade un borde si lo deseas */
+            border-bottom: 1px solid #ccc;
+        }
+
+        #coordinate-container {
+            height: 30px;
+            width: 100%;
+            background-color: #9B2247;
+            /* El color vino de la marca */
+            color: #FFFFFF;
+            display: flex;
+            align-items: center;
+            padding: 0 15px;
+            font-family: Arial, sans-serif;
+            font-size: 14px;
+            /* Elimina cualquier margen superior */
+            margin-top: 0;
+            /* Asegura que no haya espacio adicional */
+            box-sizing: border-box;
+            border-top: 1px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .coordinate-group {
+            margin: 0 15px;
+        }
+
+        .coordinate-label {
+            font-weight: bold;
+            color: #E6D194;
+            /* Un rosa muy pálido para la etiqueta */
+            margin-right: 8px;
+            opacity: 0.9;
+        }
+
+        .coordinate-value {
+            font-family: monospace;
+            color: #FFFFFF;
+            /* Valor en blanco brillante */
+        }
+
+        .conabio-attribution-logo {
+            height: 18px;
+            /* Altura del logo */
+            width: auto;
+            vertical-align: middle;
+            /* Alinea el logo con el texto */
+            margin-right: 1px;
+            /* Espacio entre el logo y el texto */
         }
     </style>
 </head>
@@ -395,6 +451,16 @@
                             echo '<p style="text-align: center; padding-top: 20px; color: red;">No se puede mostrar en el mapa.</p>';
                         }
                         ?>
+                    </div>
+                    <div id="coordinate-container">
+                        <div class="coordinate-group">
+                            <span class="coordinate-label">Decimal:</span>
+                            <span id="decimal-coords" class="coordinate-value">0.000000, 0.000000</span>
+                        </div>
+                        <div class="coordinate-group">
+                            <span class="coordinate-label">GMS:</span>
+                            <span id="dms-coords" class="coordinate-value">0°0'0" N, 0°0'0" E</span>
+                        </div>
                     </div>
                 </div>
                 <h2>Información curatorial</h2>
@@ -664,7 +730,7 @@
                             <td><?php echo $altitudmapa; ?></td>
                             <td><?php echo $altitudinicialejemplar;  ?></td>
                         </tr>
-                        
+
                     </tbody>
                 </table>
 
@@ -760,10 +826,23 @@
             var map = L.map('map', {
                 minZoom: 1
             }).setView([lat, lon], 8);
+
+            //ES PARA QUITAR EL Leaflet
+           /*  map.attributionControl.setPrefix('');  */
+
             globalMapInstance = map;
+
+            const conabioLogoUrl = '../images/logo_conabio.png';
+
+            const customAttribution = `
+            <img src="${conabioLogoUrl}" class="conabio-attribution-logo" >
+            CONABIO 
+            `;
+
             L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                attribution: customAttribution
             }).addTo(map);
+
             L.control.scale({
                 metric: true,
                 imperial: false
@@ -931,6 +1010,40 @@
                     mostrarDivIncertidumbre();
                 });
 
+                function toDMS(decimal, isLat) {
+                    var dir = decimal < 0 ? (isLat ? 'S' : 'W') : (isLat ? 'N' : 'E');
+                    var absDecimal = Math.abs(decimal);
+                    var deg = Math.floor(absDecimal);
+                    var minFloat = (absDecimal - deg) * 60;
+                    var min = Math.floor(minFloat);
+                    var sec = Math.round((minFloat - min) * 60 * 100) / 100; // Redondeamos a 2 decimales
+
+                    // Asegurar que los segundos no sean 60 (podría ocurrir por redondeo)
+                    if (sec >= 60) {
+                        sec = 0;
+                        min++;
+                    }
+                    if (min >= 60) {
+                        min = 0;
+                        deg++;
+                    }
+
+                    return deg + "°" + min + "'" + sec + '" ' + dir;
+                }
+
+                map.on('mousemove', function(e) {
+                    var lat = e.latlng.lat;
+                    var lng = e.latlng.lng;
+
+                    // Actualizar coordenadas decimales
+                    document.getElementById('decimal-coords').textContent =
+                        lat.toFixed(6) + ', ' + lng.toFixed(6);
+
+                    // Actualizar coordenadas GMS
+                    document.getElementById('dms-coords').textContent =
+                        toDMS(lat, true) + ', ' + toDMS(lng, false);
+                });
+
                 mainMarker.setIcon(iconoParaUsar);
 
                 if (debeMostrarCirculo) {
@@ -989,6 +1102,8 @@
 
 
 
+
+
         const botonDescarga = document.getElementById('floating-download-btn');
 
         <?php if (!empty($mensaje_alerta) && strpos($mensaje_alerta, 'alert-danger') !== false) : ?>
@@ -1021,7 +1136,7 @@
                 $catalogoOriginal = $catdiccespecieoriginal;
             }
             ?>
-            
+
 
             if (botonDescarga) {
                 const todosLosDatos = {
@@ -1109,10 +1224,10 @@
                     "observaciones": <?php echo json_encode($obsusoinfo ?? null); ?>,
                     "URL_del_ejemplar": <?php echo json_encode($urlejemplar ?? null); ?>,
                     "URL_de_origen": <?php echo json_encode($urlorigen ?? null); ?>,
-                    "fechaActualizacion": <?php echo json_encode($ultimafechaactualizacion ?? null); ?>, 
-                    "licencia_de_uso": <?php echo json_encode($licenciauso ?? null); ?>, 
-                    "forma_de_citar": <?php echo json_encode($formadecitar ?? null); ?>, 
-                    
+                    "fechaActualizacion": <?php echo json_encode($ultimafechaactualizacion ?? null); ?>,
+                    "licencia_de_uso": <?php echo json_encode($licenciauso ?? null); ?>,
+                    "forma_de_citar": <?php echo json_encode($formadecitar ?? null); ?>,
+
                 };
 
                 function convertirObjetoA_CSV_Estricto(datos) {
