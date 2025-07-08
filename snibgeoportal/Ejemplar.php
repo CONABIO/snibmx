@@ -286,11 +286,8 @@
         #map {
             height: 400px;
             width: 100%;
-            /* Elimina el margin-bottom que estaba creando el espacio */
             margin-bottom: 0;
-            /* Asegura que no haya padding que cree espacio */
             padding: 0;
-            /* Opcional: añade un borde si lo deseas */
             border-bottom: 1px solid #ccc;
         }
 
@@ -298,16 +295,13 @@
             height: 30px;
             width: 100%;
             background-color: #9B2247;
-            /* El color vino de la marca */
             color: #FFFFFF;
             display: flex;
             align-items: center;
             padding: 0 15px;
             font-family: Arial, sans-serif;
             font-size: 14px;
-            /* Elimina cualquier margen superior */
             margin-top: 0;
-            /* Asegura que no haya espacio adicional */
             box-sizing: border-box;
             border-top: 1px solid rgba(255, 255, 255, 0.3);
         }
@@ -319,7 +313,6 @@
         .coordinate-label {
             font-weight: bold;
             color: #E6D194;
-            /* Un rosa muy pálido para la etiqueta */
             margin-right: 8px;
             opacity: 0.9;
         }
@@ -327,17 +320,13 @@
         .coordinate-value {
             font-family: monospace;
             color: #FFFFFF;
-            /* Valor en blanco brillante */
         }
 
         .conabio-attribution-logo {
-            height: 1px;
-            /* Altura del logo */
+            height: 15px;
             width: auto;
             vertical-align: middle;
-            /* Alinea el logo con el texto */
             margin-right: 1px;
-            /* Espacio entre el logo y el texto */
         }
     </style>
 </head>
