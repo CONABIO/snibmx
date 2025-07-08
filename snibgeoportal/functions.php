@@ -74,7 +74,7 @@ class enciclovida
             $claseoriginal = $ordenoriginal = $familiaoriginal = $generooriginal = $epitetoespecificooriginal = $epitetoinfraespecificooriginal =
             $categoriainfraespecieoriginal = $nombrevalidocatscat = $nombreoriginallimpioscat = $categoriacatscat = $categoriaoriginalscat = $autoranioespeciecat =
             $autoranioinfraespeciecat = $autoranioespecieoriginal = $autoranioinfraespecieoriginal = $estatusespeciecat = $estatusinfraespeciecat =
-            $estatusespecieoriginal = $estatusinfraespecieoriginal = $catdiccespeciecat = $catdiccinfraespeciecat = $catdiccespecieoriginal =
+            $estatusespecieoriginal = $estatusinfraespecieoriginal = $catdiccespeciecatvalido = $catdiccinfraespeciecatvalido = $catdiccespecieoriginal =
             $catdiccinfraespecieoriginal = $endemismo = $iucn = $cites = $nom059 = $prioritaria = $exoticainvasora = $paisoriginal = $estadooriginal =
             $municipiooriginal = $geoposmapagacetlitetiq = $usvserieVII = $altitudmapa = $altitudinicialejemplar = $paismapa = $estadomapa = $municipiomapa =
             $datumoriginal = $tipovegetacion = $fuentegeorreferenciacion = $tipovegetacionmapa = $observacionescoordenadasconabio = '';
@@ -99,7 +99,7 @@ class enciclovida
                         n.nombrevalidocatscat, n.nombreoriginallimpioscat, n.categoriacatscat, n.categoriaoriginalscat, n.autoranioespeciecat,
                         n.autoranioinfraespeciecat, n.autoranioespecieoriginal, n.autoranioinfraespecieoriginal,
                         n.estatusespeciecat, n.estatusinfraespeciecat, n.estatusespecieoriginal, n.estatusinfraespecieoriginal,
-                        n.catdiccespeciecat, n.catdiccinfraespeciecat, n.catdiccespecieoriginal, n.catdiccinfraespecieoriginal,
+                        n.catdiccespeciecatvalido, n.catdiccinfraespeciecatvalido, n.catdiccespecieoriginal, n.catdiccinfraespecieoriginal,
                         i.endemismo, i.iucn, i.cites, i.nom059, i.prioritaria, i.exoticainvasora,
                         r.paisoriginal, r.estadooriginal, r.municipiooriginal,
                         g.geoposmapagacetlitetiq,
@@ -259,8 +259,8 @@ class enciclovida
                 $estatusinfraespeciecat,
                 $estatusespecieoriginal,
                 $estatusinfraespecieoriginal,
-                $catdiccespeciecat,
-                $catdiccinfraespeciecat,
+                $catdiccespeciecatvalido,
+                $catdiccinfraespeciecatvalido,
                 $catdiccespecieoriginal,
                 $catdiccinfraespecieoriginal,
                 $endemismo,
@@ -355,8 +355,8 @@ class enciclovida
                     $estatusinfraespeciecat,
                     $estatusespecieoriginal,
                     $estatusinfraespecieoriginal,
-                    $catdiccespeciecat,
-                    $catdiccinfraespeciecat,
+                    $catdiccespeciecatvalido,
+                    $catdiccinfraespeciecatvalido,
                     $catdiccespecieoriginal,
                     $catdiccinfraespecieoriginal,
                     $endemismo,

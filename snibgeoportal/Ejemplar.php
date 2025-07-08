@@ -116,8 +116,8 @@
             $estatusinfraespeciecat,
             $estatusespecieoriginal,
             $estatusinfraespecieoriginal,
-            $catdiccespeciecat,
-            $catdiccinfraespeciecat,
+            $catdiccespeciecatvalido,
+            $catdiccinfraespeciecatvalido,
             $catdiccespecieoriginal,
             $catdiccinfraespecieoriginal,
             $endemismo,
@@ -331,7 +331,7 @@
         }
 
         .conabio-attribution-logo {
-            height: 18px;
+            height: 1px;
             /* Altura del logo */
             width: auto;
             vertical-align: middle;
@@ -616,10 +616,10 @@
 
                         <tr>
                             <td>Sistema de clasificación/Catálogo de autoridad</td>
-                            <td><?php if ($catdiccinfraespeciecat === '') {
-                                    echo $catdiccespeciecat;
+                            <td><?php if ($catdiccinfraespeciecatvalido === '') {
+                                    echo $catdiccespeciecatvalido;
                                 } else {
-                                    echo $catdiccinfraespeciecat;
+                                    echo $catdiccinfraespeciecatvalido;
                                 }
                                 ?></td>
                             <td><?php if ($catdiccinfraespecieoriginal === '') {
@@ -1125,8 +1125,8 @@
             $catalogoConabio = '';
             if (isset($catdiccinfraespeciecat) && $catdiccinfraespeciecat !== '') {
                 $catalogoConabio = $catdiccinfraespeciecat;
-            } elseif (isset($catdiccespeciecat)) {
-                $catalogoConabio = $catdiccespeciecat;
+            } elseif (isset($catdiccespeciecatvalido)) {
+                $catalogoConabio = $catdiccespeciecatvalido;
             }
 
             $catalogoOriginal = '';
