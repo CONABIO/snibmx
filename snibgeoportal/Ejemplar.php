@@ -537,6 +537,11 @@
                             <td><?php echo ''; ?></td>
                             <td><?php echo $tipoPreparacion  ?></td>
                         </tr>
+                        <tr>
+                            <td>Tipo de vegetación</td>
+                            <td></td>
+                            <td><?php echo $tipovegetacion;  ?></td>
+                        </tr>
                     </tbody>
                 </table>
 
@@ -708,12 +713,7 @@
                             <td>Fuente georreferencia</td>
                             <td><?php echo '';  ?></td>
                             <td><?php echo $fuentegeorreferenciacion;  ?></td>
-                        </tr>
-                        <tr>
-                            <td>Tipo de vegetación</td>
-                            <td><?php echo $tipovegetacionmapa;  ?></td>
-                            <td><?php echo $tipovegetacion;  ?></td>
-                        </tr>
+                        </tr>                        
                         <tr>
                             <td>Altitud o profundidad</td>
                             <td><?php echo $altitudmapa; ?></td>
